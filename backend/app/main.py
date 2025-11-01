@@ -3,6 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.v1.ai import router as ai_router
 from app.api.v1.auth import router as auth_router
 from app.api.v1.days import router as days_router
 from app.api.v1.exercises import router as exercises_router
@@ -99,6 +100,12 @@ app.include_router(
     users_router,
     prefix=f"{settings.API_V1_PREFIX}/users",
     tags=["users"],
+)
+
+app.include_router(
+    ai_router,
+    prefix=f"{settings.API_V1_PREFIX}/ai",
+    tags=["ai"],
 )
 
 

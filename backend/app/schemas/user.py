@@ -42,6 +42,7 @@ class UserResponse(UserBase):
     """Schema for user response."""
 
     id: int
+    username: Optional[str] = Field(None, min_length=3, max_length=50)  # Override to make optional
     age: Optional[int] = None
     height: Optional[float] = None
     weight: Optional[float] = None

@@ -3,7 +3,7 @@
 from datetime import date
 from typing import List, Optional
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.models.day import Day
 
@@ -23,9 +23,17 @@ class DayService:
         Returns:
             Day object (existing or newly created)
         """
-        # Try to get existing day
+        # Try to get existing day with eager loading
         day = (
             db.query(Day)
+            .options(
+                joinedload(Day.meals),
+                joinedload(Day.exercises),
+                joinedload(Day.water_intakes),
+                joinedload(Day.sleep_records),
+                joinedload(Day.mood_records),
+                joinedload(Day.notes),
+            )
             .filter(Day.user_id == user_id, Day.date == day_date)
             .first()
         )
@@ -54,6 +62,14 @@ class DayService:
         """
         return (
             db.query(Day)
+            .options(
+                joinedload(Day.meals),
+                joinedload(Day.exercises),
+                joinedload(Day.water_intakes),
+                joinedload(Day.sleep_records),
+                joinedload(Day.mood_records),
+                joinedload(Day.notes),
+            )
             .filter(Day.user_id == user_id, Day.date == day_date)
             .first()
         )
@@ -75,6 +91,14 @@ class DayService:
         """
         return (
             db.query(Day)
+            .options(
+                joinedload(Day.meals),
+                joinedload(Day.exercises),
+                joinedload(Day.water_intakes),
+                joinedload(Day.sleep_records),
+                joinedload(Day.mood_records),
+                joinedload(Day.notes),
+            )
             .filter(
                 Day.user_id == user_id,
                 Day.date >= start_date,

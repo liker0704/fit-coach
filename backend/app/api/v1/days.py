@@ -4,7 +4,7 @@ from datetime import date, timedelta
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 
 from app.core.dependencies import get_current_user, get_db
 from app.models.day import Day
@@ -118,6 +118,50 @@ def get_days_range(
 
     days = DayService.get_days_range(db, current_user.id, start_date, end_date)
     return days
+
+
+@router.get("/days/id/{day_id}", response_model=DayResponse)
+def get_day_by_id(
+    day_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Get day by ID (for navigation from calendar).
+
+    Args:
+        day_id: Day database ID
+        db: Database session
+        current_user: Current authenticated user
+
+    Returns:
+        Day data with all nested resources
+
+    Raises:
+        HTTPException: 404 if day not found
+        HTTPException: 403 if not authorized
+    """
+    day = db.query(Day).options(
+        joinedload(Day.meals),
+        joinedload(Day.exercises),
+        joinedload(Day.water_intakes),
+        joinedload(Day.sleep_records),
+        joinedload(Day.mood_records),
+        joinedload(Day.notes),
+    ).filter(Day.id == day_id).first()
+
+    if not day:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Day not found"
+        )
+
+    if day.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not authorized to access this day"
+        )
+
+    return day
 
 
 @router.put("/days/{day_id}", response_model=DayResponse)

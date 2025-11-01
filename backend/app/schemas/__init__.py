@@ -1,5 +1,11 @@
 """Schemas package."""
 
+from app.schemas.ai import (
+    CoachingRequest,
+    CoachingResponse,
+    SummaryRequest,
+    SummaryResponse,
+)
 from app.schemas.auth import (
     PasswordChange,
     PasswordReset,
@@ -16,6 +22,11 @@ from app.schemas.user import UserCreate, UserInDB, UserResponse, UserUpdate
 from app.schemas.water import WaterCreate, WaterResponse, WaterUpdate
 
 __all__ = [
+    # AI schemas
+    "CoachingRequest",
+    "CoachingResponse",
+    "SummaryRequest",
+    "SummaryResponse",
     # User schemas
     "UserCreate",
     "UserUpdate",

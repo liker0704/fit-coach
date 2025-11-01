@@ -32,7 +32,10 @@ class Settings(BaseSettings):
         "http://localhost:3000",
         "http://localhost:5173",
         "http://localhost:8080",
+        "http://localhost:1420",  # Tauri dev server
         "tauri://localhost",
+        "http://tauri.localhost",
+        "https://tauri.localhost",
     ]
 
     # Database
@@ -65,11 +68,26 @@ class Settings(BaseSettings):
     REDIS_PORT: int = 6379
     REDIS_DB: int = 0
 
-    # LLM
-    OPENAI_API_KEY: str = ""
-    LLM_MODEL: str = "gpt-4-turbo"
+    # LLM Configuration
+    LLM_PROVIDER: str = "openai"
+    OPENAI_API_KEY: Optional[str] = None
+    GOOGLE_API_KEY: Optional[str] = None
+    LLM_MODEL_NAME: str = "gpt-3.5-turbo"
     LLM_TEMPERATURE: float = 0.7
-    LLM_MAX_TOKENS: int = 2000
+    LLM_MAX_TOKENS: int = 500
+
+    @field_validator("LLM_MODEL_NAME", mode="before")
+    @classmethod
+    def set_default_model_name(cls, v: Optional[str], info) -> str:
+        """Set default model name based on provider if not specified."""
+        if v:
+            return v
+        provider = info.data.get("LLM_PROVIDER", "openai").lower()
+        if provider == "openai":
+            return "gpt-3.5-turbo"
+        elif provider == "gemini":
+            return "gemini-pro"
+        return "gpt-3.5-turbo"
 
     # File Storage
     UPLOAD_DIR: str = "uploads"
