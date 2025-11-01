@@ -1,0 +1,86 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv
+
+# Poetry
+poetry.lock
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+
+# Database
+*.db
+*.sqlite3
+
+# Logs
+*.log
+logs/
+
+# Uploads
+uploads/
+temp/
+
+# Alembic
+alembic/versions/*.pyc
+
+# Node (for desktop)
+node_modules/
+dist/
+.next/
+out/
+
+# Tauri
+desktop/src-tauri/target/
+
+# iOS
+ios/Pods/
+ios/*.xcworkspace
+ios/.build/
+ios/DerivedData/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+.claude/

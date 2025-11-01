@@ -1,0 +1,79 @@
+"""User schemas."""
+
+from datetime import datetime
+from typing import Optional
+
+from pydantic import BaseModel, ConfigDict, EmailStr, Field
+
+
+class UserBase(BaseModel):
+    """Base user schema."""
+
+    email: EmailStr
+    username: str = Field(..., min_length=3, max_length=50)
+    full_name: Optional[str] = Field(None, max_length=255)
+
+
+class UserCreate(UserBase):
+    """Schema for user registration."""
+
+    password: str = Field(..., min_length=8, max_length=100)
+    age: Optional[int] = Field(None, ge=10, le=120)
+    height: Optional[float] = Field(None, ge=50, le=300)  # in cm
+    weight: Optional[float] = Field(None, ge=20, le=500)  # in kg
+
+
+class UserUpdate(BaseModel):
+    """Schema for user profile update (only profile fields, not auth fields)."""
+
+    full_name: Optional[str] = Field(None, max_length=255)
+    age: Optional[int] = Field(None, ge=10, le=120)
+    height: Optional[float] = Field(None, ge=50, le=300)  # in cm
+    weight: Optional[float] = Field(None, ge=20, le=500)  # in kg
+    target_weight: Optional[float] = Field(None, ge=20, le=500)  # in kg
+    language: Optional[str] = Field(None, max_length=10)
+    timezone: Optional[str] = Field(None, max_length=50)
+    water_goal: Optional[float] = Field(None, ge=0, le=10)  # liters
+    calorie_goal: Optional[int] = Field(None, ge=0, le=10000)
+    sleep_goal: Optional[float] = Field(None, ge=0, le=24)  # hours
+
+
+class UserResponse(UserBase):
+    """Schema for user response."""
+
+    id: int
+    age: Optional[int] = None
+    height: Optional[float] = None
+    weight: Optional[float] = None
+    target_weight: Optional[float] = None
+
+    # Settings
+    language: Optional[str] = "en"
+    timezone: Optional[str] = "UTC"
+    water_goal: Optional[float] = 2.5
+    calorie_goal: Optional[int] = 2000
+    sleep_goal: Optional[float] = 8.0
+
+    # Status
+    is_active: bool = True
+    is_superuser: bool = False
+    is_verified: bool = False
+
+    # Timestamps
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+
+    model_config = ConfigDict(from_attributes=True)
+
+
+class UserInDB(UserResponse):
+    """Internal schema with hashed password."""
+
+    hashed_password: str
+
+
+class ChangePasswordRequest(BaseModel):
+    """Schema for password change request."""
+
+    current_password: str = Field(..., min_length=1)
+    new_password: str = Field(..., min_length=8, max_length=100)
