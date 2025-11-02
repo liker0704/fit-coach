@@ -6,6 +6,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { waterService } from '@/services/modules/waterService';
 import { WaterAddDialog } from './WaterAddDialog';
+import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import type { Day, WaterIntake } from '@/types/models/health';
 import { Droplets, Trash2, Plus, Clock } from 'lucide-react';
 
@@ -18,11 +19,14 @@ export function WaterSection({ day, onUpdate }: WaterSectionProps) {
   const { toast } = useToast();
   const [addingAmount, setAddingAmount] = useState<number | null>(null);
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [waterToDelete, setWaterToDelete] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const DAILY_GOAL = 2.5; // 2.5L default goal
 
   // Calculate total water intake
-  const totalWater = day.water_intakes.reduce((sum, intake) => sum + intake.amount, 0);
+  const totalWater = day.water_intakes.reduce((sum, intake) => sum + Number(intake.amount), 0);
   const percentage = Math.min((totalWater / DAILY_GOAL) * 100, 100);
 
   const handleQuickAdd = async (amount: number) => {
@@ -33,7 +37,11 @@ export function WaterSection({ day, onUpdate }: WaterSectionProps) {
       const now = new Date();
       const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:00`;
 
-      await waterService.create(day.id, { amount, time });
+      // Transform empty strings to undefined to prevent 422 validation errors
+      await waterService.create(day.id, {
+        amount,
+        time: time || undefined
+      });
 
       toast({
         title: 'Success',
@@ -52,13 +60,18 @@ export function WaterSection({ day, onUpdate }: WaterSectionProps) {
     }
   };
 
-  const handleDelete = async (waterIntakeId: number) => {
-    const confirmed = window.confirm('Are you sure you want to delete this water intake?');
-    if (!confirmed) return;
+  const handleDeleteClick = (waterIntakeId: number) => {
+    setWaterToDelete(waterIntakeId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!waterToDelete) return;
 
     try {
-      setDeletingId(waterIntakeId);
-      await waterService.delete(waterIntakeId);
+      setIsDeleting(true);
+      setDeletingId(waterToDelete);
+      await waterService.delete(waterToDelete);
       toast({
         title: 'Success',
         description: 'Water intake deleted successfully',
@@ -71,7 +84,10 @@ export function WaterSection({ day, onUpdate }: WaterSectionProps) {
         variant: 'destructive',
       });
     } finally {
+      setIsDeleting(false);
       setDeletingId(null);
+      setWaterToDelete(null);
+      setDeleteDialogOpen(false);
     }
   };
 
@@ -91,7 +107,7 @@ export function WaterSection({ day, onUpdate }: WaterSectionProps) {
         <Button
           variant="ghost"
           size="sm"
-          onClick={() => handleDelete(intake.id)}
+          onClick={() => handleDeleteClick(intake.id)}
           disabled={deletingId === intake.id}
         >
           <Trash2 className="h-4 w-4 text-red-500" />
@@ -197,6 +213,15 @@ export function WaterSection({ day, onUpdate }: WaterSectionProps) {
           </CardContent>
         </Card>
       )}
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+        title="Delete Water Intake?"
+        description="Are you sure you want to delete this water intake? This action cannot be undone."
+        isDeleting={isDeleting}
+      />
     </div>
   );
 }

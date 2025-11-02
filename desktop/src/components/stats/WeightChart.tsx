@@ -11,12 +11,16 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { format } from 'date-fns';
 import type { Day } from '@/types/models/health';
+import { useContainerSize } from '@/hooks/useContainerSize';
 
 interface WeightChartProps {
   days: Day[];
 }
 
 const WeightChartComponent = ({ days }: WeightChartProps) => {
+  const [containerRef, { width }] = useContainerSize();
+  const chartWidth = width > 100 ? Math.min(width - 40, 550) : 550;
+
   // Transform days to chart data
   // For now, using placeholder weight data (75kg)
   // In the future, this should extract from user profile updates
@@ -30,12 +34,12 @@ const WeightChartComponent = ({ days }: WeightChartProps) => {
   );
 
   return (
-    <Card>
+    <Card ref={containerRef}>
       <CardHeader>
         <CardTitle>Weight Trend</CardTitle>
       </CardHeader>
       <CardContent>
-        <LineChart data={data} width={550} height={300}>
+        <LineChart data={data} width={chartWidth} height={300}>
           <XAxis dataKey="date" />
           <YAxis domain={[60, 80]} />
           <Tooltip />

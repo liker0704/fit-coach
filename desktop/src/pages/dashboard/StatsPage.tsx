@@ -66,7 +66,7 @@ export default function StatsPage() {
   };
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6 h-full overflow-y-auto">
       <h1 className="text-3xl font-bold mb-6">Statistics</h1>
 
       {/* Filters */}
@@ -111,7 +111,7 @@ export default function StatsPage() {
 
       {/* Charts Grid */}
       {!loading && days.length > 0 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 [&>*]:min-w-0">
           <LazyLoadChart height={300}>
             <WeightChart days={days} />
           </LazyLoadChart>

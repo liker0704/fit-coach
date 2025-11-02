@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { moodService } from '@/services/modules/moodService';
 import { MoodForm } from './MoodForm';
+import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import type { Day } from '@/types/models/health';
 import { Smile, Trash2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -44,14 +45,22 @@ const getMoodBgColor = (level: number): string => {
 export function MoodSection({ day, onUpdate }: MoodSectionProps) {
   const { toast } = useToast();
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [moodToDelete, setMoodToDelete] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleDelete = async (moodId: number) => {
-    const confirmed = window.confirm('Are you sure you want to delete this mood record?');
-    if (!confirmed) return;
+  const handleDeleteClick = (moodId: number) => {
+    setMoodToDelete(moodId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!moodToDelete) return;
 
     try {
-      setDeletingId(moodId);
-      await moodService.delete(moodId);
+      setIsDeleting(true);
+      setDeletingId(moodToDelete);
+      await moodService.delete(moodToDelete);
       toast({
         title: 'Success',
         description: 'Mood record deleted successfully',
@@ -64,7 +73,10 @@ export function MoodSection({ day, onUpdate }: MoodSectionProps) {
         variant: 'destructive',
       });
     } finally {
+      setIsDeleting(false);
       setDeletingId(null);
+      setMoodToDelete(null);
+      setDeleteDialogOpen(false);
     }
   };
 
@@ -94,7 +106,7 @@ export function MoodSection({ day, onUpdate }: MoodSectionProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleDelete(moodRecord.id)}
+                  onClick={() => handleDeleteClick(moodRecord.id)}
                   disabled={deletingId === moodRecord.id}
                 >
                   <Trash2 className="h-4 w-4 text-red-500" />
@@ -104,15 +116,15 @@ export function MoodSection({ day, onUpdate }: MoodSectionProps) {
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Mood Display */}
-            <div className={cn('p-6 rounded-lg text-center', getMoodBgColor(moodRecord.mood_level))}>
+            <div className={cn('p-6 rounded-lg text-center', getMoodBgColor(moodRecord.rating))}>
               <div className="text-7xl mb-3">
-                {MOOD_EMOJIS[moodRecord.mood_level]}
+                {MOOD_EMOJIS[moodRecord.rating]}
               </div>
-              <p className={cn('text-2xl font-bold', getMoodColor(moodRecord.mood_level))}>
-                {MOOD_LABELS[moodRecord.mood_level]}
+              <p className={cn('text-2xl font-bold', getMoodColor(moodRecord.rating))}>
+                {MOOD_LABELS[moodRecord.rating]}
               </p>
               <p className="text-sm text-muted-foreground mt-1">
-                {moodRecord.mood_level}/5
+                {moodRecord.rating}/5
               </p>
             </div>
 
@@ -123,7 +135,7 @@ export function MoodSection({ day, onUpdate }: MoodSectionProps) {
                   key={level}
                   className={cn(
                     'flex flex-col items-center transition-all',
-                    moodRecord.mood_level === level
+                    moodRecord.rating === level
                       ? 'scale-125 opacity-100'
                       : 'opacity-30'
                   )}
@@ -170,6 +182,15 @@ export function MoodSection({ day, onUpdate }: MoodSectionProps) {
           </CardContent>
         </Card>
       )}
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+        title="Delete Mood Record?"
+        description="Are you sure you want to delete this mood record? This action cannot be undone."
+        isDeleting={isDeleting}
+      />
     </div>
   );
 }

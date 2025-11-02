@@ -20,28 +20,36 @@ export interface Day {
 export interface Meal {
   id: number;
   day_id: number;
-  name: string;
-  category?: string | null;
+  category: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  time: string | null;
   calories: number | null;
   protein: number | null;
   carbs: number | null;
-  fats: number | null;
-  meal_time: string | null;
+  fat: number | null;
+  fiber: number | null;
+  sugar: number | null;
+  sodium: number | null;
   notes: string | null;
+  photo_url: string | null;
+  ai_summary: string | null;
+  ai_suggestions: string | null;
+  created_at: string;
 }
 
 export interface Exercise {
   id: number;
   day_id: number;
-  name: string;
-  exercise_type: string | null;
-  start_time?: string | null;
+  type: string;
+  name: string | null;
+  start_time: string | null;
   duration: number | null;
-  distance?: number | null;
-  intensity?: number | null;
+  distance: number | null;
   calories_burned: number | null;
-  heart_rate?: number | null;
+  heart_rate_avg: number | null;
+  heart_rate_max: number | null;
+  intensity: number | null;
   notes: string | null;
+  created_at: string;
 }
 
 export interface WaterIntake {
@@ -64,9 +72,14 @@ export interface SleepRecord {
 export interface MoodRecord {
   id: number;
   day_id: number;
-  mood_level: number;
+  time: string;
+  rating: number;
+  energy_level: number | null;
+  stress_level: number | null;
+  anxiety_level: number | null;
+  tags: string[] | null;
   notes: string | null;
-  time: string | null;
+  created_at: string;
 }
 
 export interface Note {

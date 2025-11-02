@@ -20,7 +20,11 @@ import { Plus, Pencil } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const moodSchema = z.object({
-  mood_level: z.number().min(1).max(5),
+  rating: z.number().min(1).max(5),
+  time: z.string().optional(),
+  energy_level: z.number().min(1).max(5).optional(),
+  stress_level: z.number().min(1).max(5).optional(),
+  anxiety_level: z.number().min(1).max(5).optional(),
   tags: z.array(z.string()).optional(),
   notes: z.string().optional(),
 });
@@ -61,8 +65,8 @@ export function MoodForm({ dayId, mood, onSuccess }: MoodFormProps) {
   const parsedTags: string[] = [];
 
   const [formData, setFormData] = useState<MoodFormData>({
-    mood_level: mood?.mood_level || 3,
-    tags: parsedTags,
+    rating: mood?.rating || 3,
+    tags: mood?.tags || parsedTags,
     notes: mood?.notes || '',
   });
 
@@ -76,10 +80,15 @@ export function MoodForm({ dayId, mood, onSuccess }: MoodFormProps) {
       const validatedData = moodSchema.parse(formData);
       setLoading(true);
 
-      // Convert tags to notes format (since backend doesn't support tags array)
+      // Prepare payload with required time field and convert empty strings to undefined
       const payload = {
-        mood_level: validatedData.mood_level,
-        notes: validatedData.notes || '',
+        time: validatedData.time || new Date().toISOString(),
+        rating: validatedData.rating,
+        energy_level: validatedData.energy_level,
+        stress_level: validatedData.stress_level,
+        anxiety_level: validatedData.anxiety_level,
+        tags: validatedData.tags && validatedData.tags.length > 0 ? validatedData.tags : undefined,
+        notes: validatedData.notes || undefined,
       };
 
       if (mood) {
@@ -176,10 +185,10 @@ export function MoodForm({ dayId, mood, onSuccess }: MoodFormProps) {
                   <button
                     key={level}
                     type="button"
-                    onClick={() => updateField('mood_level', level)}
+                    onClick={() => updateField('rating', level)}
                     className={cn(
                       'flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all hover:scale-105',
-                      formData.mood_level === level
+                      formData.rating === level
                         ? 'border-primary bg-primary/10 scale-105'
                         : 'border-muted hover:border-muted-foreground/30'
                     )}
@@ -189,8 +198,8 @@ export function MoodForm({ dayId, mood, onSuccess }: MoodFormProps) {
                   </button>
                 ))}
               </div>
-              <p className={cn('text-center font-medium', getMoodColor(formData.mood_level))}>
-                {MOOD_LABELS[formData.mood_level]}
+              <p className={cn('text-center font-medium', getMoodColor(formData.rating))}>
+                {MOOD_LABELS[formData.rating]}
               </p>
             </div>
 

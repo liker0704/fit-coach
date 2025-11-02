@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { TimePicker24 } from '@/components/ui/TimePicker24';
 import { Sun, Moon, Monitor } from 'lucide-react';
 
 interface FormData {
@@ -169,7 +170,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="container max-w-2xl mx-auto p-6">
+    <div className="container max-w-2xl mx-auto p-6 h-full overflow-y-auto">
       <h1 className="text-3xl font-bold mb-6">Profile & Settings</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
@@ -412,12 +413,11 @@ export default function ProfilePage() {
 
               {formData.notifications_enabled && (
                 <div className="ml-6">
-                  <Label htmlFor="reminder_time">Reminder Time</Label>
-                  <Input
-                    id="reminder_time"
-                    type="time"
+                  <TimePicker24
+                    label="Reminder Time"
                     value={formData.reminder_time}
-                    onChange={(e) => handleInputChange('reminder_time', e.target.value)}
+                    onChange={(value) => handleInputChange('reminder_time', value)}
+                    placeholder="21:00"
                     className="w-40"
                   />
                 </div>

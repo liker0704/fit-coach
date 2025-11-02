@@ -21,20 +21,22 @@ import {
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
+import { TimePicker24 } from '@/components/ui/TimePicker24';
 import { useToast } from '@/hooks/use-toast';
 import { exercisesService } from '@/services/modules/exercisesService';
 import type { Exercise } from '@/types/models/health';
 import { Plus, Pencil } from 'lucide-react';
 
 const exerciseSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  exercise_type: z.enum(['running', 'gym', 'yoga', 'swimming', 'cycling', 'other']),
-  start_time: z.string().min(1, 'Start time is required'),
-  duration: z.number().min(1, 'Duration must be at least 1 minute'),
+  type: z.string().min(1, 'Exercise type is required'),
+  name: z.string().optional(),
+  start_time: z.string().optional(),
+  duration: z.number().min(0).optional(),
   distance: z.number().min(0).optional(),
-  intensity: z.number().min(1).max(5),
+  intensity: z.number().min(1).max(10).optional(),
   calories_burned: z.number().min(0).optional(),
-  heart_rate: z.number().min(0).optional(),
+  heart_rate_avg: z.number().min(0).optional(),
+  heart_rate_max: z.number().min(0).optional(),
   notes: z.string().optional(),
 });
 
@@ -51,14 +53,15 @@ export function ExerciseForm({ dayId, exercise, onSuccess }: ExerciseFormProps) 
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<ExerciseFormData>({
+    type: exercise?.type || 'running',
     name: exercise?.name || '',
-    exercise_type: (exercise?.exercise_type as ExerciseFormData['exercise_type']) || 'running',
     start_time: exercise?.start_time || '',
     duration: exercise?.duration || 30,
     distance: exercise?.distance || undefined,
     intensity: exercise?.intensity || 3,
     calories_burned: exercise?.calories_burned || undefined,
-    heart_rate: exercise?.heart_rate || undefined,
+    heart_rate_avg: exercise?.heart_rate_avg || undefined,
+    heart_rate_max: exercise?.heart_rate_max || undefined,
     notes: exercise?.notes || '',
   });
 
@@ -73,16 +76,24 @@ export function ExerciseForm({ dayId, exercise, onSuccess }: ExerciseFormProps) 
       const validatedData = exerciseSchema.parse(formData);
       setLoading(true);
 
+      // Transform empty strings to undefined
+      const exerciseData = {
+        ...validatedData,
+        name: validatedData.name || undefined,
+        start_time: validatedData.start_time || undefined,
+        notes: validatedData.notes || undefined,
+      };
+
       if (exercise) {
         // Update existing exercise
-        await exercisesService.update(exercise.id, validatedData);
+        await exercisesService.update(exercise.id, exerciseData);
         toast({
           title: 'Success',
           description: 'Exercise updated successfully',
         });
       } else {
         // Create new exercise
-        await exercisesService.create(dayId, validatedData);
+        await exercisesService.create({ ...exerciseData, day_id: dayId });
         toast({
           title: 'Success',
           description: 'Exercise added successfully',
@@ -124,8 +135,6 @@ export function ExerciseForm({ dayId, exercise, onSuccess }: ExerciseFormProps) 
     }
   };
 
-  const intensityLabels = ['Very Light', 'Light', 'Moderate', 'Hard', 'Very Hard'];
-
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger asChild>
@@ -151,10 +160,10 @@ export function ExerciseForm({ dayId, exercise, onSuccess }: ExerciseFormProps) 
           <div className="grid gap-4 py-4">
             {/* Exercise Type */}
             <div className="grid gap-2">
-              <Label htmlFor="exercise_type">Type *</Label>
+              <Label htmlFor="type">Type *</Label>
               <Select
-                value={formData.exercise_type}
-                onValueChange={(value) => updateField('exercise_type', value)}
+                value={formData.type}
+                onValueChange={(value) => updateField('type', value)}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Select type" />
@@ -168,14 +177,14 @@ export function ExerciseForm({ dayId, exercise, onSuccess }: ExerciseFormProps) 
                   <SelectItem value="other">Other</SelectItem>
                 </SelectContent>
               </Select>
-              {errors.exercise_type && (
-                <p className="text-sm text-red-500">{errors.exercise_type}</p>
+              {errors.type && (
+                <p className="text-sm text-red-500">{errors.type}</p>
               )}
             </div>
 
             {/* Name */}
             <div className="grid gap-2">
-              <Label htmlFor="name">Name *</Label>
+              <Label htmlFor="name">Name</Label>
               <Input
                 id="name"
                 value={formData.name}
@@ -189,12 +198,11 @@ export function ExerciseForm({ dayId, exercise, onSuccess }: ExerciseFormProps) 
 
             {/* Start Time */}
             <div className="grid gap-2">
-              <Label htmlFor="start_time">Start Time *</Label>
-              <Input
-                id="start_time"
-                type="time"
-                value={formData.start_time}
-                onChange={(e) => updateField('start_time', e.target.value)}
+              <TimePicker24
+                label="Start Time"
+                value={formData.start_time || ''}
+                onChange={(value) => updateField('start_time', value)}
+                placeholder="09:00"
               />
               {errors.start_time && (
                 <p className="text-sm text-red-500">{errors.start_time}</p>
@@ -204,14 +212,14 @@ export function ExerciseForm({ dayId, exercise, onSuccess }: ExerciseFormProps) 
             {/* Duration and Distance */}
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="duration">Duration (minutes) *</Label>
+                <Label htmlFor="duration">Duration (minutes)</Label>
                 <Input
                   id="duration"
                   type="number"
-                  min="1"
-                  value={formData.duration}
+                  min="0"
+                  value={formData.duration || ''}
                   onChange={(e) =>
-                    updateField('duration', e.target.value ? Number(e.target.value) : 1)
+                    updateField('duration', e.target.value ? Number(e.target.value) : undefined)
                   }
                   placeholder="e.g., 30"
                 />
@@ -238,52 +246,67 @@ export function ExerciseForm({ dayId, exercise, onSuccess }: ExerciseFormProps) 
             {/* Intensity */}
             <div className="grid gap-2">
               <Label htmlFor="intensity">
-                Intensity * - {intensityLabels[formData.intensity - 1]}
+                Intensity {formData.intensity ? `- ${formData.intensity}/10` : ''}
               </Label>
               <Slider
                 id="intensity"
                 min={1}
-                max={5}
+                max={10}
                 step={1}
-                value={[formData.intensity]}
+                value={[formData.intensity || 5]}
                 onValueChange={(value) => updateField('intensity', value[0])}
                 className="py-4"
               />
               <div className="flex justify-between text-xs text-muted-foreground">
-                <span>Very Light</span>
-                <span>Very Hard</span>
+                <span>1 - Very Light</span>
+                <span>10 - Maximum</span>
               </div>
               {errors.intensity && (
                 <p className="text-sm text-red-500">{errors.intensity}</p>
               )}
             </div>
 
-            {/* Calories and Heart Rate */}
+            {/* Calories */}
+            <div className="grid gap-2">
+              <Label htmlFor="calories_burned">Calories Burned</Label>
+              <Input
+                id="calories_burned"
+                type="number"
+                min="0"
+                value={formData.calories_burned || ''}
+                onChange={(e) =>
+                  updateField('calories_burned', e.target.value ? Number(e.target.value) : undefined)
+                }
+                placeholder="e.g., 300"
+              />
+            </div>
+
+            {/* Heart Rate */}
             <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
-                <Label htmlFor="calories_burned">Calories Burned</Label>
+                <Label htmlFor="heart_rate_avg">Avg Heart Rate (bpm)</Label>
                 <Input
-                  id="calories_burned"
+                  id="heart_rate_avg"
                   type="number"
                   min="0"
-                  value={formData.calories_burned || ''}
+                  value={formData.heart_rate_avg || ''}
                   onChange={(e) =>
-                    updateField('calories_burned', e.target.value ? Number(e.target.value) : undefined)
+                    updateField('heart_rate_avg', e.target.value ? Number(e.target.value) : undefined)
                   }
-                  placeholder="e.g., 300"
+                  placeholder="e.g., 145"
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="heart_rate">Heart Rate (bpm)</Label>
+                <Label htmlFor="heart_rate_max">Max Heart Rate (bpm)</Label>
                 <Input
-                  id="heart_rate"
+                  id="heart_rate_max"
                   type="number"
                   min="0"
-                  value={formData.heart_rate || ''}
+                  value={formData.heart_rate_max || ''}
                   onChange={(e) =>
-                    updateField('heart_rate', e.target.value ? Number(e.target.value) : undefined)
+                    updateField('heart_rate_max', e.target.value ? Number(e.target.value) : undefined)
                   }
-                  placeholder="e.g., 145"
+                  placeholder="e.g., 180"
                 />
               </div>
             </div>

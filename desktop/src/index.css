@@ -85,3 +85,39 @@
     -moz-osx-font-smoothing: grayscale;
   }
 }
+
+/* Prevent body scroll - only allow scroll in page containers */
+/* Aggressive rules needed for Electron */
+html, body {
+  overflow: hidden !important;
+  height: 100vh !important;
+  width: 100vw !important;
+  position: fixed !important;
+  margin: 0;
+  padding: 0;
+  touch-action: none;
+  overscroll-behavior: none;
+}
+
+#root {
+  overflow: hidden;
+  height: 100vh;
+  width: 100vw;
+  margin: 0;
+  padding: 0;
+}
+
+/* Hide scrollbars while keeping scroll functionality */
+* {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+*::-webkit-scrollbar {
+  display: none;  /* Chrome, Safari, Opera */
+}
+
+/* Prevent scroll chaining for all scrollable containers */
+.overflow-y-auto, .overflow-auto {
+  overscroll-behavior: contain;
+}

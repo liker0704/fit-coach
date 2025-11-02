@@ -17,7 +17,7 @@ export default function Sidebar() {
   return (
     <div className="w-60 bg-card border-r border-border flex flex-col h-screen">
       {/* Logo */}
-      <div className="p-6 border-b border-border">
+      <div className="h-16 px-6 border-b border-border flex items-center">
         <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
           FitCoach
         </h1>

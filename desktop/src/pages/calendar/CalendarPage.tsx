@@ -73,18 +73,18 @@ export default function CalendarPage() {
   // Get color classes based on effort score
   const getEffortColorClasses = (effortScore?: number | null) => {
     if (effortScore === null || effortScore === undefined) {
-      return 'bg-gray-50 border-gray-200';
+      return 'bg-gray-50 dark:bg-gray-800 border-gray-200 dark:border-gray-700';
     }
     if (effortScore >= 8) {
-      return 'bg-green-100 border-green-500';
+      return 'bg-green-100 dark:bg-green-900/40 border-green-500 dark:border-green-600';
     }
     if (effortScore >= 5) {
-      return 'bg-yellow-100 border-yellow-500';
+      return 'bg-yellow-100 dark:bg-yellow-900/40 border-yellow-500 dark:border-yellow-600';
     }
     if (effortScore >= 3) {
-      return 'bg-orange-100 border-orange-500';
+      return 'bg-orange-100 dark:bg-orange-900/40 border-orange-500 dark:border-orange-600';
     }
-    return 'bg-red-100 border-red-500';
+    return 'bg-red-100 dark:bg-red-900/40 border-red-500 dark:border-red-600';
   };
 
   // Handle day click
@@ -125,8 +125,8 @@ export default function CalendarPage() {
   const weekDays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   return (
-    <div className="container mx-auto p-6 max-w-6xl">
-      <Card>
+    <div className="h-full flex flex-col overflow-hidden p-4 md:p-6 max-w-6xl mx-auto">
+      <Card className="h-full flex flex-col overflow-hidden">
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="text-2xl font-bold">
@@ -160,7 +160,7 @@ export default function CalendarPage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent>
+        <CardContent className="flex-1 overflow-y-auto min-h-0 pb-4">
           {loading ? (
             <div className="flex items-center justify-center h-96">
               <div className="text-muted-foreground">Loading calendar...</div>
@@ -191,9 +191,9 @@ export default function CalendarPage() {
                       key={index}
                       onClick={() => handleDayClick(date)}
                       className={cn(
-                        'relative aspect-square rounded-lg border-2 p-2 transition-all hover:shadow-md',
+                        'relative min-h-[60px] sm:min-h-[70px] md:aspect-square rounded-lg border-2 p-2 transition-all hover:shadow-md',
                         getEffortColorClasses(dayData?.effort_score),
-                        !isCurrentMonth && 'opacity-30',
+                        !isCurrentMonth && 'opacity-40 dark:opacity-50',
                         isTodayDate && 'ring-2 ring-primary ring-offset-2',
                         'flex flex-col items-center justify-center'
                       )}
@@ -201,7 +201,9 @@ export default function CalendarPage() {
                       <span
                         className={cn(
                           'text-sm font-medium',
-                          !isCurrentMonth && 'text-muted-foreground'
+                          !isCurrentMonth
+                            ? 'text-gray-400 dark:text-gray-600'
+                            : 'text-gray-900 dark:text-gray-100'
                         )}
                       >
                         {format(date, 'd')}

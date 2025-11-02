@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { sleepService } from '@/services/modules/sleepService';
 import { SleepForm } from './SleepForm';
+import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import type { Day } from '@/types/models/health';
 import { Moon, Trash2 } from 'lucide-react';
 
@@ -31,14 +32,22 @@ const renderStars = (rating: number) => {
 export function SleepSection({ day, onUpdate }: SleepSectionProps) {
   const { toast } = useToast();
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [sleepToDelete, setSleepToDelete] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleDelete = async (sleepId: number) => {
-    const confirmed = window.confirm('Are you sure you want to delete this sleep record?');
-    if (!confirmed) return;
+  const handleDeleteClick = (sleepId: number) => {
+    setSleepToDelete(sleepId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!sleepToDelete) return;
 
     try {
-      setDeletingId(sleepId);
-      await sleepService.delete(sleepId);
+      setIsDeleting(true);
+      setDeletingId(sleepToDelete);
+      await sleepService.delete(sleepToDelete);
       toast({
         title: 'Success',
         description: 'Sleep record deleted successfully',
@@ -51,7 +60,10 @@ export function SleepSection({ day, onUpdate }: SleepSectionProps) {
         variant: 'destructive',
       });
     } finally {
+      setIsDeleting(false);
       setDeletingId(null);
+      setSleepToDelete(null);
+      setDeleteDialogOpen(false);
     }
   };
 
@@ -81,7 +93,7 @@ export function SleepSection({ day, onUpdate }: SleepSectionProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleDelete(sleepRecord.id)}
+                  onClick={() => handleDeleteClick(sleepRecord.id)}
                   disabled={deletingId === sleepRecord.id}
                 >
                   <Trash2 className="h-4 w-4 text-red-500" />
@@ -138,6 +150,15 @@ export function SleepSection({ day, onUpdate }: SleepSectionProps) {
           </CardContent>
         </Card>
       )}
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+        title="Delete Sleep Record?"
+        description="Are you sure you want to delete this sleep record? This action cannot be undone."
+        isDeleting={isDeleting}
+      />
     </div>
   );
 }

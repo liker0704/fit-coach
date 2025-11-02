@@ -5,6 +5,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { exercisesService } from '@/services/modules/exercisesService';
 import { ExerciseForm } from './ExerciseForm';
+import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import type { Day, Exercise } from '@/types/models/health';
 import { Dumbbell, Trash2, Clock, Flame, Heart } from 'lucide-react';
 
@@ -16,14 +17,22 @@ interface ExerciseSectionProps {
 export function ExerciseSection({ day, onUpdate }: ExerciseSectionProps) {
   const { toast } = useToast();
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [exerciseToDelete, setExerciseToDelete] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleDelete = async (exerciseId: number) => {
-    const confirmed = window.confirm('Are you sure you want to delete this exercise?');
-    if (!confirmed) return;
+  const handleDeleteClick = (exerciseId: number) => {
+    setExerciseToDelete(exerciseId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!exerciseToDelete) return;
 
     try {
-      setDeletingId(exerciseId);
-      await exercisesService.delete(exerciseId);
+      setIsDeleting(true);
+      setDeletingId(exerciseToDelete);
+      await exercisesService.delete(exerciseToDelete);
       toast({
         title: 'Success',
         description: 'Exercise deleted successfully',
@@ -36,7 +45,10 @@ export function ExerciseSection({ day, onUpdate }: ExerciseSectionProps) {
         variant: 'destructive',
       });
     } finally {
+      setIsDeleting(false);
       setDeletingId(null);
+      setExerciseToDelete(null);
+      setDeleteDialogOpen(false);
     }
   };
 
@@ -50,15 +62,13 @@ export function ExerciseSection({ day, onUpdate }: ExerciseSectionProps) {
       other: '🏋️',
     };
 
-    const intensityStars = '⭐'.repeat(exercise.intensity || 0);
-
     return (
       <div key={exercise.id} className="py-3">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 space-y-1">
             <div className="flex items-center gap-2">
-              <span>{typeIcons[exercise.exercise_type || 'other']}</span>
-              <h4 className="font-medium">{exercise.name}</h4>
+              <span>{typeIcons[exercise.type || 'other']}</span>
+              <h4 className="font-medium">{exercise.name || exercise.type}</h4>
               {exercise.start_time && (
                 <span className="flex items-center text-sm text-muted-foreground">
                   <Clock className="mr-1 h-3 w-3" />
@@ -75,8 +85,8 @@ export function ExerciseSection({ day, onUpdate }: ExerciseSectionProps) {
                 <span>{exercise.distance} km</span>
               )}
               {exercise.intensity && (
-                <span title={`Intensity: ${exercise.intensity}/5`}>
-                  {intensityStars}
+                <span title={`Intensity: ${exercise.intensity}/10`}>
+                  Intensity: {exercise.intensity}/10
                 </span>
               )}
               {exercise.calories_burned && (
@@ -85,10 +95,11 @@ export function ExerciseSection({ day, onUpdate }: ExerciseSectionProps) {
                   {exercise.calories_burned} cal
                 </span>
               )}
-              {exercise.heart_rate && (
+              {exercise.heart_rate_avg && (
                 <span className="flex items-center">
                   <Heart className="mr-1 h-3 w-3" />
-                  {exercise.heart_rate} bpm
+                  {exercise.heart_rate_avg} bpm avg
+                  {exercise.heart_rate_max && ` / ${exercise.heart_rate_max} max`}
                 </span>
               )}
             </div>
@@ -103,7 +114,7 @@ export function ExerciseSection({ day, onUpdate }: ExerciseSectionProps) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => handleDelete(exercise.id)}
+              onClick={() => handleDeleteClick(exercise.id)}
               disabled={deletingId === exercise.id}
             >
               <Trash2 className="h-4 w-4 text-red-500" />
@@ -185,6 +196,15 @@ export function ExerciseSection({ day, onUpdate }: ExerciseSectionProps) {
           </CardContent>
         </Card>
       )}
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+        title="Delete Exercise?"
+        description="Are you sure you want to delete this exercise? This action cannot be undone."
+        isDeleting={isDeleting}
+      />
     </div>
   );
 }

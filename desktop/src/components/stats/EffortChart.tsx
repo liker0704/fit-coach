@@ -10,12 +10,16 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { format } from 'date-fns';
 import type { Day } from '@/types/models/health';
+import { useContainerSize } from '@/hooks/useContainerSize';
 
 interface EffortChartProps {
   days: Day[];
 }
 
 const EffortChartComponent = ({ days }: EffortChartProps) => {
+  const [containerRef, { width }] = useContainerSize();
+  const chartWidth = width > 100 ? Math.min(width - 40, 550) : 550;
+
   // Transform days to chart data - get AI effort score
   const data = useMemo(
     () =>
@@ -27,12 +31,12 @@ const EffortChartComponent = ({ days }: EffortChartProps) => {
   );
 
   return (
-    <Card>
+    <Card ref={containerRef}>
       <CardHeader>
         <CardTitle>AI Effort Score</CardTitle>
       </CardHeader>
       <CardContent>
-        <AreaChart data={data} width={550} height={300}>
+        <AreaChart data={data} width={chartWidth} height={300}>
           <defs>
             <linearGradient id="effortGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#8B5CF6" stopOpacity={0.8} />

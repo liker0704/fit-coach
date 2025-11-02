@@ -36,7 +36,7 @@ export function DayCardPreview({ day }: DayCardPreviewProps) {
   );
 
   const sleepHours = day.sleep_records[0]?.duration || 0;
-  const moodLevel = day.mood_records[0]?.mood_level || 0;
+  const moodLevel = day.mood_records[0]?.rating || 0;
   const effortScore = day.effort_score || 0;
 
   // Format date

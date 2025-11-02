@@ -20,20 +20,24 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
+import { TimePicker24 } from '@/components/ui/TimePicker24';
 import { useToast } from '@/hooks/use-toast';
 import { mealsService } from '@/services/modules/mealsService';
 import type { Meal } from '@/types/models/health';
 import { Plus, Pencil } from 'lucide-react';
 
 const mealSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
   category: z.enum(['breakfast', 'lunch', 'dinner', 'snack']),
-  meal_time: z.string().min(1, 'Time is required'),
+  time: z.string().optional(),
   calories: z.number().min(0).optional(),
   protein: z.number().min(0).optional(),
   carbs: z.number().min(0).optional(),
-  fats: z.number().min(0).optional(),
+  fat: z.number().min(0).optional(),
+  fiber: z.number().min(0).optional(),
+  sugar: z.number().min(0).optional(),
+  sodium: z.number().min(0).optional(),
   notes: z.string().optional(),
+  photo_url: z.string().optional(),
 });
 
 type MealFormData = z.infer<typeof mealSchema>;
@@ -49,14 +53,17 @@ export function MealForm({ dayId, meal, onSuccess }: MealFormProps) {
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState<MealFormData>({
-    name: meal?.name || '',
     category: (meal?.category as MealFormData['category']) || 'breakfast',
-    meal_time: meal?.meal_time || '',
+    time: meal?.time || '',
     calories: meal?.calories || undefined,
     protein: meal?.protein || undefined,
     carbs: meal?.carbs || undefined,
-    fats: meal?.fats || undefined,
+    fat: meal?.fat || undefined,
+    fiber: meal?.fiber || undefined,
+    sugar: meal?.sugar || undefined,
+    sodium: meal?.sodium || undefined,
     notes: meal?.notes || '',
+    photo_url: meal?.photo_url || '',
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -70,16 +77,24 @@ export function MealForm({ dayId, meal, onSuccess }: MealFormProps) {
       const validatedData = mealSchema.parse(formData);
       setLoading(true);
 
+      // Transform empty strings to undefined for optional fields to match backend expectations
+      const transformedData = {
+        ...validatedData,
+        time: validatedData.time || undefined,
+        notes: validatedData.notes || undefined,
+        photo_url: validatedData.photo_url || undefined,
+      };
+
       if (meal) {
         // Update existing meal
-        await mealsService.update(meal.id, validatedData);
+        await mealsService.update(meal.id, transformedData);
         toast({
           title: 'Success',
           description: 'Meal updated successfully',
         });
       } else {
         // Create new meal
-        await mealsService.create(dayId, validatedData);
+        await mealsService.create(dayId, transformedData);
         toast({
           title: 'Success',
           description: 'Meal added successfully',
@@ -166,31 +181,16 @@ export function MealForm({ dayId, meal, onSuccess }: MealFormProps) {
               )}
             </div>
 
-            {/* Name */}
-            <div className="grid gap-2">
-              <Label htmlFor="name">Name *</Label>
-              <Input
-                id="name"
-                value={formData.name}
-                onChange={(e) => updateField('name', e.target.value)}
-                placeholder="e.g., Chicken Salad"
-              />
-              {errors.name && (
-                <p className="text-sm text-red-500">{errors.name}</p>
-              )}
-            </div>
-
             {/* Time */}
             <div className="grid gap-2">
-              <Label htmlFor="meal_time">Time *</Label>
-              <Input
-                id="meal_time"
-                type="time"
-                value={formData.meal_time}
-                onChange={(e) => updateField('meal_time', e.target.value)}
+              <TimePicker24
+                label="Time"
+                value={formData.time || ''}
+                onChange={(value) => updateField('time', value)}
+                placeholder="12:00"
               />
-              {errors.meal_time && (
-                <p className="text-sm text-red-500">{errors.meal_time}</p>
+              {errors.time && (
+                <p className="text-sm text-red-500">{errors.time}</p>
               )}
             </div>
 
@@ -238,14 +238,14 @@ export function MealForm({ dayId, meal, onSuccess }: MealFormProps) {
                 />
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="fats">Fats (g)</Label>
+                <Label htmlFor="fat">Fat (g)</Label>
                 <Input
-                  id="fats"
+                  id="fat"
                   type="number"
                   min="0"
-                  value={formData.fats || ''}
+                  value={formData.fat || ''}
                   onChange={(e) =>
-                    updateField('fats', e.target.value ? Number(e.target.value) : undefined)
+                    updateField('fat', e.target.value ? Number(e.target.value) : undefined)
                   }
                   placeholder="e.g., 15"
                 />

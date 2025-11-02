@@ -2,25 +2,32 @@ import { apiClient } from '../api/client';
 import type { Meal } from '@/types/models/health';
 
 export interface CreateMealDto {
-  name: string;
-  meal_time?: string;
-  category?: string;
+  day_id: number;
+  category: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  time?: string;
   calories?: number;
   protein?: number;
   carbs?: number;
-  fats?: number;
+  fat?: number;
+  fiber?: number;
+  sugar?: number;
+  sodium?: number;
   notes?: string;
+  photo_url?: string;
 }
 
 export interface UpdateMealDto {
-  name?: string;
-  meal_time?: string;
-  category?: string;
+  category?: 'breakfast' | 'lunch' | 'dinner' | 'snack';
+  time?: string;
   calories?: number;
   protein?: number;
   carbs?: number;
-  fats?: number;
+  fat?: number;
+  fiber?: number;
+  sugar?: number;
+  sodium?: number;
   notes?: string;
+  photo_url?: string;
 }
 
 export const mealsService = {
@@ -34,8 +41,11 @@ export const mealsService = {
     return response.data;
   },
 
-  create: async (dayId: number, data: CreateMealDto): Promise<Meal> => {
-    const response = await apiClient.post(`/days/${dayId}/meals`, data);
+  create: async (dayId: number, data: Omit<CreateMealDto, 'day_id'>): Promise<Meal> => {
+    const response = await apiClient.post(`/days/${dayId}/meals`, {
+      ...data,
+      day_id: dayId,
+    });
     return response.data;
   },
 

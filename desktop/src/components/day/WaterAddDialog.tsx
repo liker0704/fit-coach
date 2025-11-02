@@ -45,7 +45,11 @@ export function WaterAddDialog({ dayId, onSuccess }: WaterAddDialogProps) {
       const now = new Date();
       const time = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}:00`;
 
-      await waterService.create(dayId, { amount, time });
+      // Transform empty strings to undefined to prevent 422 validation errors
+      await waterService.create(dayId, {
+        amount,
+        time: time || undefined
+      });
 
       toast({
         title: 'Success',

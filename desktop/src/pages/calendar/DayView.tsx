@@ -92,7 +92,7 @@ export default function DayView() {
   };
 
   return (
-    <div className="container mx-auto py-6 px-4 max-w-6xl">
+    <div className="container mx-auto py-6 px-4 max-w-6xl h-full overflow-y-auto">
       {/* Header */}
       <div className="mb-6">
         <Button

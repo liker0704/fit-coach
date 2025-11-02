@@ -10,29 +10,33 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { format } from 'date-fns';
 import type { Day } from '@/types/models/health';
+import { useContainerSize } from '@/hooks/useContainerSize';
 
 interface MoodChartProps {
   days: Day[];
 }
 
 const MoodChartComponent = ({ days }: MoodChartProps) => {
+  const [containerRef, { width }] = useContainerSize();
+  const chartWidth = width > 100 ? Math.min(width - 40, 550) : 550;
+
   // Transform days to chart data - get mood level
   const data = useMemo(
     () =>
       days.map((day) => ({
         date: format(new Date(day.date), 'MM/dd'),
-        mood: day.mood_records[0]?.mood_level || 0,
+        mood: day.mood_records[0]?.rating || 0,
       })),
     [days]
   );
 
   return (
-    <Card>
+    <Card ref={containerRef}>
       <CardHeader>
         <CardTitle>Mood Levels</CardTitle>
       </CardHeader>
       <CardContent>
-        <AreaChart data={data} width={550} height={300}>
+        <AreaChart data={data} width={chartWidth} height={300}>
           <defs>
             <linearGradient id="moodGradient" x1="0" y1="0" x2="0" y2="1">
               <stop offset="5%" stopColor="#10b981" stopOpacity={0.8} />

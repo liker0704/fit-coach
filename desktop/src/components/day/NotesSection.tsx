@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
 import { notesService } from '@/services/modules/notesService';
 import { NotesForm } from './NotesForm';
+import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import type { Day } from '@/types/models/health';
 import { FileText, Trash2 } from 'lucide-react';
 
@@ -71,14 +72,22 @@ const renderMarkdown = (text: string) => {
 export function NotesSection({ day, onUpdate }: NotesSectionProps) {
   const { toast } = useToast();
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [noteToDelete, setNoteToDelete] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleDelete = async (noteId: number) => {
-    const confirmed = window.confirm('Are you sure you want to delete this note?');
-    if (!confirmed) return;
+  const handleDeleteClick = (noteId: number) => {
+    setNoteToDelete(noteId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!noteToDelete) return;
 
     try {
-      setDeletingId(noteId);
-      await notesService.delete(noteId);
+      setIsDeleting(true);
+      setDeletingId(noteToDelete);
+      await notesService.delete(noteToDelete);
       toast({
         title: 'Success',
         description: 'Note deleted successfully',
@@ -91,7 +100,10 @@ export function NotesSection({ day, onUpdate }: NotesSectionProps) {
         variant: 'destructive',
       });
     } finally {
+      setIsDeleting(false);
       setDeletingId(null);
+      setNoteToDelete(null);
+      setDeleteDialogOpen(false);
     }
   };
 
@@ -119,7 +131,7 @@ export function NotesSection({ day, onUpdate }: NotesSectionProps) {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => handleDelete(note.id)}
+                  onClick={() => handleDeleteClick(note.id)}
                   disabled={deletingId === note.id}
                 >
                   <Trash2 className="h-4 w-4 text-red-500" />
@@ -156,6 +168,15 @@ export function NotesSection({ day, onUpdate }: NotesSectionProps) {
           </CardContent>
         </Card>
       )}
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+        title="Delete Note?"
+        description="Are you sure you want to delete this note? This action cannot be undone."
+        isDeleting={isDeleting}
+      />
     </div>
   );
 }

@@ -2,8 +2,8 @@ import { apiClient } from '../api/client';
 import type { SleepRecord } from '@/types/models/health';
 
 export interface CreateSleepDto {
-  bedtime: string;      // HH:MM format
-  wake_time: string;    // HH:MM format
+  bedtime?: string;     // HH:MM format (optional)
+  wake_time?: string;   // HH:MM format (optional)
   duration?: number;    // hours (calculated)
   quality?: number;     // 1-5
   notes?: string;

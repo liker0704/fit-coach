@@ -5,6 +5,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { mealsService } from '@/services/modules/mealsService';
 import { MealForm } from './MealForm';
+import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import type { Day, Meal } from '@/types/models/health';
 import { Utensils, Trash2, Clock } from 'lucide-react';
 
@@ -16,14 +17,22 @@ interface MealsSectionProps {
 export function MealsSection({ day, onUpdate }: MealsSectionProps) {
   const { toast } = useToast();
   const [deletingId, setDeletingId] = useState<number | null>(null);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [mealToDelete, setMealToDelete] = useState<number | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
-  const handleDelete = async (mealId: number) => {
-    const confirmed = window.confirm('Are you sure you want to delete this meal?');
-    if (!confirmed) return;
+  const handleDeleteClick = (mealId: number) => {
+    setMealToDelete(mealId);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!mealToDelete) return;
 
     try {
-      setDeletingId(mealId);
-      await mealsService.delete(mealId);
+      setIsDeleting(true);
+      setDeletingId(mealToDelete);
+      await mealsService.delete(mealToDelete);
       toast({
         title: 'Success',
         description: 'Meal deleted successfully',
@@ -36,7 +45,10 @@ export function MealsSection({ day, onUpdate }: MealsSectionProps) {
         variant: 'destructive',
       });
     } finally {
+      setIsDeleting(false);
       setDeletingId(null);
+      setMealToDelete(null);
+      setDeleteDialogOpen(false);
     }
   };
 
@@ -52,18 +64,18 @@ export function MealsSection({ day, onUpdate }: MealsSectionProps) {
     const totalCalories = meal.calories || 0;
     const protein = meal.protein || 0;
     const carbs = meal.carbs || 0;
-    const fats = meal.fats || 0;
+    const fat = meal.fat || 0;
 
     return (
       <div key={meal.id} className="py-3">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 space-y-1">
             <div className="flex items-center gap-2">
-              <h4 className="font-medium">{meal.name}</h4>
-              {meal.meal_time && (
+              <h4 className="font-medium capitalize">{meal.category}</h4>
+              {meal.time && (
                 <span className="flex items-center text-sm text-muted-foreground">
                   <Clock className="mr-1 h-3 w-3" />
-                  {meal.meal_time}
+                  {meal.time}
                 </span>
               )}
             </div>
@@ -74,9 +86,9 @@ export function MealsSection({ day, onUpdate }: MealsSectionProps) {
               </p>
             )}
 
-            {(protein > 0 || carbs > 0 || fats > 0) && (
+            {(protein > 0 || carbs > 0 || fat > 0) && (
               <p className="text-xs text-muted-foreground">
-                P: {protein}g | C: {carbs}g | F: {fats}g
+                P: {protein}g | C: {carbs}g | F: {fat}g
               </p>
             )}
 
@@ -90,7 +102,7 @@ export function MealsSection({ day, onUpdate }: MealsSectionProps) {
             <Button
               variant="ghost"
               size="sm"
-              onClick={() => handleDelete(meal.id)}
+              onClick={() => handleDeleteClick(meal.id)}
               disabled={deletingId === meal.id}
             >
               <Trash2 className="h-4 w-4 text-red-500" />
@@ -133,7 +145,7 @@ export function MealsSection({ day, onUpdate }: MealsSectionProps) {
   const totalCalories = day.meals.reduce((sum, meal) => sum + (meal.calories || 0), 0);
   const totalProtein = day.meals.reduce((sum, meal) => sum + (meal.protein || 0), 0);
   const totalCarbs = day.meals.reduce((sum, meal) => sum + (meal.carbs || 0), 0);
-  const totalFats = day.meals.reduce((sum, meal) => sum + (meal.fats || 0), 0);
+  const totalFat = day.meals.reduce((sum, meal) => sum + (meal.fat || 0), 0);
 
   return (
     <div className="space-y-4">
@@ -158,8 +170,8 @@ export function MealsSection({ day, onUpdate }: MealsSectionProps) {
                 <p className="text-sm text-muted-foreground">Carbs</p>
               </div>
               <div>
-                <p className="text-2xl font-bold">{totalFats}g</p>
-                <p className="text-sm text-muted-foreground">Fats</p>
+                <p className="text-2xl font-bold">{totalFat}g</p>
+                <p className="text-sm text-muted-foreground">Fat</p>
               </div>
             </div>
           </CardContent>
@@ -194,6 +206,15 @@ export function MealsSection({ day, onUpdate }: MealsSectionProps) {
           </CardContent>
         </Card>
       )}
+
+      <DeleteConfirmDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        onConfirm={handleConfirmDelete}
+        title="Delete Meal?"
+        description="Are you sure you want to delete this meal? This action cannot be undone."
+        isDeleting={isDeleting}
+      />
     </div>
   );
 }

@@ -11,12 +11,16 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { format } from 'date-fns';
 import type { Day } from '@/types/models/health';
+import { useContainerSize } from '@/hooks/useContainerSize';
 
 interface NutritionChartProps {
   days: Day[];
 }
 
 const NutritionChartComponent = ({ days }: NutritionChartProps) => {
+  const [containerRef, { width }] = useContainerSize();
+  const chartWidth = width > 100 ? Math.min(width - 40, 550) : 550;
+
   // Transform days to chart data - sum all meal calories
   const data = useMemo(
     () =>
@@ -28,12 +32,12 @@ const NutritionChartComponent = ({ days }: NutritionChartProps) => {
   );
 
   return (
-    <Card>
+    <Card ref={containerRef}>
       <CardHeader>
         <CardTitle>Daily Calories</CardTitle>
       </CardHeader>
       <CardContent>
-        <LineChart data={data} width={550} height={300}>
+        <LineChart data={data} width={chartWidth} height={300}>
           <XAxis dataKey="date" />
           <YAxis />
           <Tooltip />

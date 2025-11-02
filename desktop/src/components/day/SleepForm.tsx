@@ -10,10 +10,10 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Slider } from '@/components/ui/slider';
+import { TimePicker24 } from '@/components/ui/TimePicker24';
 import { useToast } from '@/hooks/use-toast';
 import { sleepService } from '@/services/modules/sleepService';
 import type { SleepRecord } from '@/types/models/health';
@@ -84,9 +84,13 @@ export function SleepForm({ dayId, sleep, onSuccess }: SleepFormProps) {
 
       setLoading(true);
 
+      // Transform empty strings to undefined to prevent 422 validation errors
       const payload = {
-        ...validatedData,
+        bedtime: validatedData.bedtime || undefined,
+        wake_time: validatedData.wake_time || undefined,
         duration: calculatedDuration,
+        quality: validatedData.quality,
+        notes: validatedData.notes || undefined,
       };
 
       if (sleep) {
@@ -170,12 +174,12 @@ export function SleepForm({ dayId, sleep, onSuccess }: SleepFormProps) {
           <div className="grid gap-4 py-4">
             {/* Bedtime */}
             <div className="grid gap-2">
-              <Label htmlFor="bedtime">Bedtime *</Label>
-              <Input
-                id="bedtime"
-                type="time"
-                value={formData.bedtime}
-                onChange={(e) => updateField('bedtime', e.target.value)}
+              <TimePicker24
+                label="Bedtime"
+                value={formData.bedtime || ''}
+                onChange={(value) => updateField('bedtime', value)}
+                placeholder="22:00"
+                required
               />
               {errors.bedtime && (
                 <p className="text-sm text-red-500">{errors.bedtime}</p>
@@ -184,12 +188,12 @@ export function SleepForm({ dayId, sleep, onSuccess }: SleepFormProps) {
 
             {/* Wake Time */}
             <div className="grid gap-2">
-              <Label htmlFor="wake_time">Wake Time *</Label>
-              <Input
-                id="wake_time"
-                type="time"
-                value={formData.wake_time}
-                onChange={(e) => updateField('wake_time', e.target.value)}
+              <TimePicker24
+                label="Wake Time"
+                value={formData.wake_time || ''}
+                onChange={(value) => updateField('wake_time', value)}
+                placeholder="06:00"
+                required
               />
               {errors.wake_time && (
                 <p className="text-sm text-red-500">{errors.wake_time}</p>

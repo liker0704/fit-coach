@@ -2,26 +2,29 @@ import { apiClient } from '../api/client';
 import type { Exercise } from '@/types/models/health';
 
 export interface CreateExerciseDto {
-  name: string;
-  exercise_type?: string;
+  day_id: number;
+  type: string;
+  name?: string;
   start_time?: string;
   duration?: number;
   distance?: number;
   intensity?: number;
   calories_burned?: number;
-  heart_rate?: number;
+  heart_rate_avg?: number;
+  heart_rate_max?: number;
   notes?: string;
 }
 
 export interface UpdateExerciseDto {
+  type?: string;
   name?: string;
-  exercise_type?: string;
   start_time?: string;
   duration?: number;
   distance?: number;
   intensity?: number;
   calories_burned?: number;
-  heart_rate?: number;
+  heart_rate_avg?: number;
+  heart_rate_max?: number;
   notes?: string;
 }
 
@@ -36,8 +39,8 @@ export const exercisesService = {
     return response.data;
   },
 
-  create: async (dayId: number, data: CreateExerciseDto): Promise<Exercise> => {
-    const response = await apiClient.post(`/days/${dayId}/exercises`, data);
+  create: async (data: CreateExerciseDto): Promise<Exercise> => {
+    const response = await apiClient.post(`/days/${data.day_id}/exercises`, data);
     return response.data;
   },
 
