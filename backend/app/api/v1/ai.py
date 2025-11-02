@@ -133,7 +133,7 @@ def get_health_summary(
 
     mood_records = [m for day in days for m in day.mood_records]
     avg_mood = (
-        sum(m.mood_level for m in mood_records) / len(mood_records)
+        sum(m.rating for m in mood_records) / len(mood_records)
         if mood_records
         else None
     )

@@ -18,7 +18,7 @@ class NoteBase(BaseModel):
 class NoteCreate(NoteBase):
     """Schema for creating a new note."""
 
-    day_id: int
+    pass
 
 
 class NoteUpdate(BaseModel):

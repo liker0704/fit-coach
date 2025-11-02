@@ -1,6 +1,6 @@
 """User model."""
 
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Boolean, Column, DateTime, Integer, Numeric, String
@@ -48,9 +48,9 @@ class User(Base):
     is_verified = Column(Boolean, default=False)
 
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow)
-    updated_at = Column(DateTime, onupdate=datetime.utcnow)
-    last_login = Column(DateTime)
+    created_at = Column(DateTime(timezone=True), default=lambda: datetime.now(timezone.utc))
+    updated_at = Column(DateTime(timezone=True), onupdate=lambda: datetime.now(timezone.utc))
+    last_login = Column(DateTime(timezone=True))
 
     # Relationships
     days = relationship("Day", back_populates="user", cascade="all, delete-orphan")

@@ -4,7 +4,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class SleepBase(BaseModel):
@@ -23,7 +23,22 @@ class SleepBase(BaseModel):
 class SleepCreate(SleepBase):
     """Schema for creating a new sleep record."""
 
-    day_id: int
+    @field_validator('bedtime', 'wake_time', mode='before')
+    @classmethod
+    def parse_time_string(cls, v):
+        """Parse HH:MM format time strings into datetime objects."""
+        if not v or v == '':
+            return None
+        if isinstance(v, str):
+            # Parse "HH:MM" format
+            try:
+                time_obj = datetime.strptime(v, '%H:%M').time()
+                # Combine with today's date
+                return datetime.combine(datetime.now().date(), time_obj)
+            except ValueError:
+                # If already datetime or invalid, return as-is (let Pydantic handle)
+                return v
+        return v
 
 
 class SleepUpdate(BaseModel):

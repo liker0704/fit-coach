@@ -21,7 +21,7 @@ class MoodBase(BaseModel):
 class MoodCreate(MoodBase):
     """Schema for creating a new mood record."""
 
-    day_id: int
+    pass
 
 
 class MoodUpdate(BaseModel):

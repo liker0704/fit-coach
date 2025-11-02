@@ -16,7 +16,7 @@ router = APIRouter()
 
 
 @router.post(
-    "/days/{day_id}/water",
+    "/days/{day_id}/water-intakes",
     response_model=WaterResponse,
     status_code=status.HTTP_201_CREATED,
 )
@@ -63,7 +63,7 @@ def create_water_intake(
     return water_intake
 
 
-@router.get("/days/{day_id}/water", response_model=List[WaterResponse])
+@router.get("/days/{day_id}/water-intakes", response_model=List[WaterResponse])
 def get_water_intakes_by_day(
     day_id: int,
     db: Session = Depends(get_db),
@@ -103,7 +103,7 @@ def get_water_intakes_by_day(
     return water_intakes
 
 
-@router.get("/water/{water_id}", response_model=WaterResponse)
+@router.get("/water-intakes/{water_id}", response_model=WaterResponse)
 def get_water_intake(
     water_id: int,
     db: Session = Depends(get_db),
@@ -141,7 +141,7 @@ def get_water_intake(
     return water_intake
 
 
-@router.put("/water/{water_id}", response_model=WaterResponse)
+@router.put("/water-intakes/{water_id}", response_model=WaterResponse)
 def update_water_intake(
     water_id: int,
     water_data: WaterUpdate,
@@ -193,7 +193,7 @@ def update_water_intake(
         )
 
 
-@router.delete("/water/{water_id}", status_code=status.HTTP_204_NO_CONTENT)
+@router.delete("/water-intakes/{water_id}", status_code=status.HTTP_204_NO_CONTENT)
 def delete_water_intake(
     water_id: int,
     db: Session = Depends(get_db),
