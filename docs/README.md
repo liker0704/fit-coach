@@ -7,7 +7,30 @@
 ### 🎯 Цель проекта
 Создание кроссплатформенной системы для отслеживания здоровья, привычек и получения персонализированных рекомендаций от AI-наставника.
 
+### 📊 Текущий статус проекта
+- ✅ **Backend**: MVP Complete (18/18 tests passing)
+- 🔨 **Desktop**: In Active Development (Electron + React)
+- 📋 **iOS**: Planned (specifications ready)
+- 📋 **LLM Integration**: Planned (architecture documented)
+
 ## 📚 Структура документации
+
+### 🚀 Getting Started
+
+#### [../README.md](../README.md) - **Главная страница проекта**
+Обзор проекта, архитектура, технологический стек, quick start
+
+#### [../SETUP.md](../SETUP.md) - **Единое руководство по настройке**
+Полная инструкция по установке и настройке всех компонентов:
+- Backend (Python, PostgreSQL, Docker)
+- Desktop (Node.js, Electron, React)
+- Full-stack development setup
+- Troubleshooting guide
+
+#### [../project.md](../project.md) - **Техническая спецификация (ТЗ v2.0)**
+Комплексное техническое задание на русском языке
+
+### 📖 Подробная документация
 
 ### 1. [Implementation Plan](./implementation-plan.md)
 **550+ атомарных задач** для полной реализации проекта
@@ -32,13 +55,14 @@
 - Тестирование (pytest)
 
 ### 3. [Desktop Tasks](./desktop-tasks.md)
-**Desktop клиент на Tauri + React**
-- Настройка Tauri проекта
+**Desktop клиент на Electron + React** (мигрировано с Tauri)
+- Настройка Electron проекта
 - React компоненты (40+ компонентов)
 - State management (Zustand)
-- API интеграция
-- Offline-first с SQLite
+- API интеграция с JWT
+- LocalStorage для персистентности
 - Hooks и сервисы
+- См. также: [../desktop/ELECTRON_MIGRATION.md](../desktop/ELECTRON_MIGRATION.md) для деталей миграции
 
 ### 4. [Database Schema](./database-schema.md)
 **Полная схема PostgreSQL**
@@ -76,6 +100,14 @@
 - API контракт и примеры
 - Производительность и тестирование
 
+### 8. [LLM Integration Progress](./llm-progress.md)
+**Трекинг прогресса LLM интеграции**
+- Текущий статус vs. спецификация
+- Roadmap реализации (LangChain + OpenAI)
+- API endpoints для AI функций
+- Конфигурация и настройка
+- Примеры промптов
+
 ## 🚀 Quick Start
 
 ### Для разработчиков
@@ -95,10 +127,10 @@
 - [ ] Основные API endpoints
 
 #### Milestone 2: Desktop MVP (3-4 недели)
-- [ ] Tauri setup
+- [x] Electron setup (мигрировано с Tauri)
 - [ ] Основные компоненты UI
 - [ ] Интеграция с API
-- [ ] Offline режим
+- [ ] LocalStorage персистентность
 - [ ] Базовая функциональность
 
 #### Milestone 3: LLM Integration (1-2 недели)
@@ -131,10 +163,10 @@
 - **Тестовое покрытие**: 80%+
 
 ### Технологический стек
-- **Backend**: Python 3.11, FastAPI, PostgreSQL, Redis, LangChain
-- **Desktop**: Tauri (Rust), React, TypeScript, Tailwind CSS
-- **iOS**: Swift 5.9, SwiftUI, CoreData
-- **DevOps**: Docker, GitHub Actions, Prometheus, Grafana
+- **Backend**: Python 3.11, FastAPI, PostgreSQL, Redis, LangChain (planned)
+- **Desktop**: Electron, React 19, TypeScript 5.8, TailwindCSS 3.4, Zustand
+- **iOS**: Swift 5.9, SwiftUI, CoreData (planned)
+- **DevOps**: Docker, GitHub Actions, Prometheus, Grafana (planned)
 
 ## 🔒 Безопасность
 
@@ -167,11 +199,11 @@
 
 ### Целевые метрики
 - API response time: < 100ms (p95)
-- Desktop app startup: < 2s
+- Desktop app startup: < 2s (Electron)
 - iOS app startup: < 1s
-- Bundle size Desktop: < 10MB
+- Bundle size Desktop: ~150MB (Electron + Chromium)
 - iOS app size: < 50MB
-- Offline sync: < 5s
+- LocalStorage sync: < 1s
 
 ## 🤝 Contributing
 
@@ -192,7 +224,8 @@
 ## 🔗 Полезные ссылки
 
 - [FastAPI Documentation](https://fastapi.tiangolo.com/)
-- [Tauri Documentation](https://tauri.app/)
+- [Electron Documentation](https://www.electronjs.org/docs)
+- [React Documentation](https://react.dev/)
 - [SwiftUI Documentation](https://developer.apple.com/xcode/swiftui/)
 - [LangChain Documentation](https://docs.langchain.com/)
 
@@ -200,20 +233,26 @@
 
 ## ✅ Статус документации
 
+- [x] Root README - **Главная страница проекта**
+- [x] SETUP Guide - **Единое руководство по настройке**
+- [x] Project Specification - **Техническое задание v2.0**
 - [x] Implementation Plan - **550+ задач**
 - [x] Backend Tasks - **Детальная декомпозиция с кодом**
-- [x] Desktop Tasks - **Компоненты и интеграции**
+- [x] Desktop Tasks - **Компоненты и интеграции** (обновлено для Electron)
 - [x] Database Schema - **Полная схема БД**
 - [x] API Specification - **OpenAPI 3.0**
 - [x] Architecture Decisions - **11 ADR**
 - [x] Nested Data Implementation - **Архитектура вложенных данных**
-- [ ] iOS Tasks - *В основном плане*
-- [ ] LLM Integration - *В основном плане*
+- [x] Electron Migration - **Детали миграции Tauri → Electron**
+- [ ] Desktop Components - **Документация React компонентов**
+- [ ] Backend Services - **Бизнес-логика слоев**
+- [ ] iOS Tasks - **План разработки iOS клиента**
+- [ ] LLM Integration Progress - **Трекинг прогресса LLM**
 - [ ] Testing Plan - *Запланировано*
 - [ ] Security Implementation - *Запланировано*
 
 ---
 
-**Последнее обновление**: 2025-11-01
+**Последнее обновление**: 2025-11-02
 
 Для начала работы выберите соответствующий документ из списка выше и следуйте пошаговым инструкциям. Каждая задача атомарна и может быть выполнена независимо при соблюдении зависимостей.
