@@ -12,7 +12,7 @@
 
 FitCoach is a comprehensive cross-platform health tracking system with native clients for Desktop (Linux/Windows/macOS) and iOS. All data is stored on a secure server with FastAPI backend and PostgreSQL database. The application enables tracking of daily habits, health metrics, and provides AI-powered coaching insights using LangChain + OpenAI.
 
-**Project Status**: Backend MVP complete, Desktop in active development, iOS in planning phase.
+**Project Status**: Backend MVP complete with full AI Agents system, Desktop in active development, iOS in planning phase.
 
 ## 🏗️ Architecture
 
@@ -21,13 +21,14 @@ FitCoach is a comprehensive cross-platform health tracking system with native cl
 │  Desktop App (Electron + React)  │
 │  - LocalStorage cache            │
 │  - REST API → FastAPI            │
+│  - AI Agents UI (Chat, Coaches)  │
 └────────────┬─────────────────────┘
              │ HTTPS / JWT
 ┌────────────▼─────────────────────┐
 │      FastAPI Backend (Python)    │
 │  - JWT Authentication            │
 │  - SQLAlchemy ORM                │
-│  - LangChain + OpenAI (planned)  │
+│  - AI Agents (LangChain + LLM) ✅│
 └────────────┬─────────────────────┘
              │
 ┌────────────▼─────────────────────┐
@@ -51,7 +52,12 @@ FitCoach is a comprehensive cross-platform health tracking system with native cl
 - **Sleep Tracking** - Duration, quality rating, sleep phases
 - **Mood Tracking** - 1-5 scale with tags (stress, focus, energy)
 - **Notes** - Markdown editor for daily reflections
-- **AI Coach** (planned) - LLM-powered daily summaries and recommendations
+- **AI Agents System** ✅ - 5 specialized AI coaches powered by LLM:
+  - **Vision Agent** - Meal photo recognition with Gemini/GPT-4 Vision
+  - **Daily Summary** - Personalized daily insights and recommendations
+  - **Chatbot** - Conversational fitness assistant
+  - **Nutrition Coach** - Context-aware nutrition advice
+  - **Workout Coach** - Personalized training guidance
 
 ### Statistics & Analytics
 - Weight, distance, calories, water, sleep, effort graphs
@@ -173,6 +179,7 @@ fit-coach/
 
 ## 📖 Documentation
 
+### General
 - **[SETUP.md](./SETUP.md)** - Comprehensive setup guide for all platforms
 - **[project.md](./project.md)** - Complete technical specification (Russian)
 - **[docs/](./docs/)** - Detailed documentation
@@ -180,6 +187,14 @@ fit-coach/
   - [API Specification](./docs/api-specification.md) - OpenAPI 3.0 REST API docs
   - [Database Schema](./docs/database-schema.md) - Database design & relationships
   - [Implementation Plan](./docs/implementation-plan.md) - 550+ atomic tasks breakdown
+
+### AI Agents System ✅
+- **[AI_AGENTS_COMPLETE.md](./AI_AGENTS_COMPLETE.md)** - Complete AI Agents system overview
+- **[backend/AGENTS_API_DOCUMENTATION.md](./backend/AGENTS_API_DOCUMENTATION.md)** - Full API reference for all agents
+- **[VISION_AGENT_MVP_COMPLETE.md](./VISION_AGENT_MVP_COMPLETE.md)** - Vision Agent (meal photo recognition)
+- **[VISION_AGENT_SETUP.md](./VISION_AGENT_SETUP.md)** - Gemini Vision API setup guide
+
+### Components
 - **[backend/README.md](./backend/README.md)** - Backend API documentation
 - **[desktop/README.md](./desktop/README.md)** - Desktop client documentation
 - **[desktop/ELECTRON_MIGRATION.md](./desktop/ELECTRON_MIGRATION.md)** - Tauri to Electron migration details
@@ -213,17 +228,27 @@ npm test  # Run tests (when implemented)
 - [x] Desktop foundation (Electron + React + TypeScript)
 - [x] State management & API integration
 - [x] Tauri → Electron migration for better performance
+- [x] **AI Agents System (5 agents):**
+  - [x] Vision Agent - Meal photo recognition (Gemini/GPT-4 Vision)
+  - [x] Daily Summary Agent - Personalized daily insights
+  - [x] Chatbot Agent - Conversational fitness assistant
+  - [x] Nutrition Coach - Context-aware nutrition advice
+  - [x] Workout Coach - Personalized training guidance
+- [x] Frontend UI for all AI agents (ChatbotDialog, CoachDialog, AISummarySection)
+- [x] Complete API documentation and integration tests
 
 ### 🔨 In Progress
-- [ ] Desktop UI implementation (auth, calendar, day view, statistics)
-- [ ] shadcn/ui component integration
+- [ ] Desktop UI polishing (auth, calendar, day view, statistics)
 - [ ] Calendar view with monthly grid
-- [ ] Day detail view with 7 sections
+- [ ] Enhanced statistics and charts
 
-### 📅 Planned
-- [ ] LLM integration (LangChain + OpenAI)
-- [ ] AI-powered daily summaries
-- [ ] Effort score calculation
+### 📅 Planned (Phase 2)
+- [ ] Response streaming for AI agents
+- [ ] Multi-agent coordination
+- [ ] Voice input/output for agents
+- [ ] 7-day meal plan generation
+- [ ] Training program generation (12-week programs)
+- [ ] Wearables integration (Garmin, Fitbit)
 - [ ] iOS native client
 - [ ] Data export/import (JSON)
 - [ ] Multi-language support (EN/RU/CZ)
