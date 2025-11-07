@@ -1,7 +1,7 @@
-"""Computer vision tools for meal photo analysis using GPT-4 Vision.
+"""Computer vision tools for meal photo analysis using GPT-4 Vision or Gemini Vision.
 
 This module provides tools for analyzing meal photos and identifying food items
-using GPT-4 Vision API.
+using either GPT-4 Vision API or Google Gemini Vision API.
 """
 
 import base64
@@ -11,6 +11,7 @@ from io import BytesIO
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
+import google.generativeai as genai
 from openai import AsyncOpenAI, OpenAIError
 from PIL import Image
 
@@ -18,8 +19,14 @@ from app.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Initialize OpenAI client
-client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+# Initialize OpenAI client (optional, only if using OpenAI)
+openai_client = None
+if settings.OPENAI_API_KEY:
+    openai_client = AsyncOpenAI(api_key=settings.OPENAI_API_KEY)
+
+# Initialize Gemini client (optional, only if using Gemini)
+if settings.GOOGLE_API_KEY:
+    genai.configure(api_key=settings.GOOGLE_API_KEY)
 
 # Load vision prompt
 VISION_PROMPT_PATH = Path(__file__).parent.parent / "prompts" / "vision_agent.txt"
@@ -83,11 +90,11 @@ def prepare_image(photo_path: str, max_size: Tuple[int, int] = (2048, 2048)) -> 
         raise ValueError(f"Failed to process image: {str(e)}")
 
 
-async def analyze_food_photo(photo_path: str) -> Dict[str, Any]:
-    """Analyze a meal photo using GPT-4 Vision.
+async def analyze_food_photo_gemini(photo_path: str) -> Dict[str, Any]:
+    """Analyze a meal photo using Google Gemini Vision.
 
     Identifies food items, estimates portions, and returns structured data
-    about the meal contents.
+    about the meal contents using Gemini Vision API.
 
     Args:
         photo_path: Absolute path to the meal photo
@@ -109,12 +116,6 @@ async def analyze_food_photo(photo_path: str) -> Dict[str, Any]:
             "confidence": "high/medium/low",  # Overall confidence
             "error": None or error message
         }
-
-    Example:
-        >>> result = await analyze_food_photo("/path/to/meal.jpg")
-        >>> if result["success"]:
-        ...     for item in result["items"]:
-        ...         print(f"{item['name']}: {item['quantity']}{item['unit']}")
     """
     result = {
         "success": False,
@@ -124,13 +125,174 @@ async def analyze_food_photo(photo_path: str) -> Dict[str, Any]:
     }
 
     try:
+        # Check if Gemini is configured
+        if not settings.GOOGLE_API_KEY:
+            raise ValueError("Google API key not configured")
+
         # Prepare the image
-        logger.info(f"Analyzing food photo: {photo_path}")
+        logger.info(f"Analyzing food photo with Gemini: {photo_path}")
+
+        # Check if file exists
+        if not Path(photo_path).exists():
+            raise FileNotFoundError(f"Image file not found: {photo_path}")
+
+        # Open image using PIL for Gemini
+        img = Image.open(photo_path)
+
+        # Initialize Gemini model
+        model = genai.GenerativeModel(settings.GEMINI_VISION_MODEL)
+
+        # Call Gemini Vision API
+        logger.info(f"Calling Gemini Vision API with model: {settings.GEMINI_VISION_MODEL}")
+
+        # Generate content with image and prompt
+        response = await model.generate_content_async(
+            [VISION_PROMPT, img],
+            generation_config=genai.types.GenerationConfig(
+                max_output_tokens=settings.VISION_MAX_TOKENS,
+                temperature=0.3,  # Lower temperature for more consistent results
+            )
+        )
+
+        # Extract response content
+        content = response.text
+        if not content:
+            raise ValueError("Empty response from Gemini Vision API")
+
+        logger.info(f"Gemini Vision API response: {content[:200]}...")
+
+        # Parse JSON response
+        try:
+            # Clean up response - sometimes the model adds markdown code blocks
+            content = content.strip()
+            if content.startswith("```json"):
+                content = content[7:]
+            if content.startswith("```"):
+                content = content[3:]
+            if content.endswith("```"):
+                content = content[:-3]
+            content = content.strip()
+
+            items = json.loads(content)
+
+            # Validate the response structure
+            if not isinstance(items, list):
+                raise ValueError("Response is not a JSON array")
+
+            # Validate each item has required fields
+            validated_items = []
+            for item in items:
+                if not isinstance(item, dict):
+                    logger.warning(f"Skipping invalid item: {item}")
+                    continue
+
+                # Ensure all required fields exist
+                validated_item = {
+                    "name": item.get("name", "Unknown food"),
+                    "quantity": str(item.get("quantity", "0")),
+                    "unit": item.get("unit", "grams"),
+                    "preparation": item.get("preparation", "unknown"),
+                    "confidence": item.get("confidence", "low")
+                }
+                validated_items.append(validated_item)
+
+            if not validated_items:
+                raise ValueError("No valid food items identified")
+
+            # Calculate overall confidence
+            confidence_levels = {"high": 3, "medium": 2, "low": 1}
+            avg_confidence = sum(confidence_levels.get(item["confidence"], 1)
+                               for item in validated_items) / len(validated_items)
+
+            if avg_confidence >= 2.5:
+                overall_confidence = "high"
+            elif avg_confidence >= 1.5:
+                overall_confidence = "medium"
+            else:
+                overall_confidence = "low"
+
+            result["success"] = True
+            result["items"] = validated_items
+            result["confidence"] = overall_confidence
+
+            logger.info(f"Successfully analyzed photo with Gemini: found {len(validated_items)} items "
+                       f"with {overall_confidence} confidence")
+
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse JSON response from Gemini: {e}")
+            logger.error(f"Raw response: {content}")
+            result["error"] = f"Failed to parse Gemini Vision API response: {str(e)}"
+
+            # Try to provide partial results
+            result["items"] = [{
+                "name": "Unidentified food",
+                "quantity": "0",
+                "unit": "grams",
+                "preparation": "unknown",
+                "confidence": "low"
+            }]
+
+    except FileNotFoundError as e:
+        logger.error(f"File not found: {e}")
+        result["error"] = str(e)
+
+    except ValueError as e:
+        logger.error(f"Image processing error: {e}")
+        result["error"] = str(e)
+
+    except Exception as e:
+        logger.error(f"Unexpected error analyzing photo with Gemini: {e}", exc_info=True)
+        result["error"] = f"Gemini Vision API error: {str(e)}"
+
+    return result
+
+
+async def analyze_food_photo_openai(photo_path: str) -> Dict[str, Any]:
+    """Analyze a meal photo using GPT-4 Vision.
+
+    Identifies food items, estimates portions, and returns structured data
+    about the meal contents using OpenAI Vision API.
+
+    Args:
+        photo_path: Absolute path to the meal photo
+
+    Returns:
+        Dictionary with the following structure:
+        {
+            "success": True/False,
+            "items": [
+                {
+                    "name": "chicken breast",
+                    "quantity": "150",
+                    "unit": "grams",
+                    "preparation": "grilled",
+                    "confidence": "high/medium/low"
+                },
+                ...
+            ],
+            "confidence": "high/medium/low",  # Overall confidence
+            "error": None or error message
+        }
+    """
+    result = {
+        "success": False,
+        "items": [],
+        "confidence": "low",
+        "error": None
+    }
+
+    try:
+        # Check if OpenAI is configured
+        if not openai_client:
+            raise ValueError("OpenAI API key not configured")
+
+        # Prepare the image
+        logger.info(f"Analyzing food photo with OpenAI: {photo_path}")
         img_base64 = prepare_image(photo_path)
 
         # Call GPT-4 Vision API
         logger.info(f"Calling Vision API with model: {settings.VISION_MODEL}")
-        response = await client.chat.completions.create(
+        response = await openai_client.chat.completions.create(
             model=settings.VISION_MODEL,
             messages=[
                 {
@@ -248,6 +410,59 @@ async def analyze_food_photo(photo_path: str) -> Dict[str, Any]:
         result["error"] = f"Unexpected error: {str(e)}"
 
     return result
+
+
+async def analyze_food_photo(photo_path: str) -> Dict[str, Any]:
+    """Analyze a meal photo using configured Vision provider (GPT-4 Vision or Gemini Vision).
+
+    Routes to the appropriate vision API based on settings.VISION_PROVIDER.
+    Identifies food items, estimates portions, and returns structured data
+    about the meal contents.
+
+    Args:
+        photo_path: Absolute path to the meal photo
+
+    Returns:
+        Dictionary with the following structure:
+        {
+            "success": True/False,
+            "items": [
+                {
+                    "name": "chicken breast",
+                    "quantity": "150",
+                    "unit": "grams",
+                    "preparation": "grilled",
+                    "confidence": "high/medium/low"
+                },
+                ...
+            ],
+            "confidence": "high/medium/low",  # Overall confidence
+            "error": None or error message
+        }
+
+    Example:
+        >>> result = await analyze_food_photo("/path/to/meal.jpg")
+        >>> if result["success"]:
+        ...     for item in result["items"]:
+        ...         print(f"{item['name']}: {item['quantity']}{item['unit']}")
+    """
+    # Route to appropriate provider based on configuration
+    provider = settings.VISION_PROVIDER.lower()
+
+    logger.info(f"Using vision provider: {provider}")
+
+    if provider == "gemini":
+        return await analyze_food_photo_gemini(photo_path)
+    elif provider == "openai":
+        return await analyze_food_photo_openai(photo_path)
+    else:
+        logger.error(f"Unknown vision provider: {provider}")
+        return {
+            "success": False,
+            "items": [],
+            "confidence": "low",
+            "error": f"Unknown vision provider: {provider}. Use 'openai' or 'gemini'"
+        }
 
 
 async def analyze_meal_image(photo_path: str) -> Dict[str, Any]:

@@ -90,7 +90,9 @@ class Settings(BaseSettings):
         return "gpt-3.5-turbo"
 
     # Vision Agent Settings (for meal photo recognition)
-    VISION_MODEL: str = "gpt-4-turbo"  # Supports vision
+    VISION_PROVIDER: str = "gemini"  # "openai" or "gemini"
+    VISION_MODEL: str = "gpt-4-turbo"  # For OpenAI: gpt-4-turbo, gpt-4o
+    GEMINI_VISION_MODEL: str = "gemini-2.0-flash-exp"  # For Gemini: gemini-2.0-flash-exp, gemini-1.5-flash, gemini-1.5-pro
     VISION_MAX_TOKENS: int = 500
 
     # Web Search Settings (for nutrition data lookup)
