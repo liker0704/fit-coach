@@ -1,5 +1,5 @@
 import { useLocation } from 'react-router-dom';
-import { Moon, Sun, User as UserIcon } from 'lucide-react';
+import { Moon, Sun, User as UserIcon, MessageCircle, Apple, Dumbbell } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -11,6 +11,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { useStore } from '@/store';
 import { useShallow } from 'zustand/react/shallow';
+import { ChatbotDialog, CoachDialog } from '@/components/agents';
 
 const pageNames: Record<string, string> = {
   '/': 'Calendar',
@@ -42,9 +43,39 @@ export default function Header() {
       <h2 className="text-xl font-semibold">{getPageTitle()}</h2>
 
       {/* Right Section */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-2">
+        {/* AI Agents */}
+        <ChatbotDialog
+          triggerButton={
+            <Button variant="ghost" size="sm" className="gap-2">
+              <MessageCircle className="h-4 w-4" />
+              <span className="hidden md:inline">AI Chat</span>
+            </Button>
+          }
+        />
+
+        <CoachDialog
+          type="nutrition"
+          triggerButton={
+            <Button variant="ghost" size="sm" className="gap-2">
+              <Apple className="h-4 w-4" />
+              <span className="hidden md:inline">Nutrition</span>
+            </Button>
+          }
+        />
+
+        <CoachDialog
+          type="workout"
+          triggerButton={
+            <Button variant="ghost" size="sm" className="gap-2">
+              <Dumbbell className="h-4 w-4" />
+              <span className="hidden md:inline">Workout</span>
+            </Button>
+          }
+        />
+
         {/* Dark Mode Toggle Placeholder */}
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="ghost" size="icon" className="relative ml-2">
           <Sun className="h-5 w-5 rotate-0 scale-100 transition-all dark:-rotate-90 dark:scale-0" />
           <Moon className="absolute h-5 w-5 rotate-90 scale-0 transition-all dark:rotate-0 dark:scale-100" />
           <span className="sr-only">Toggle theme</span>
