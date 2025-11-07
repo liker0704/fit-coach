@@ -9,7 +9,7 @@ from abc import ABC, abstractmethod
 from typing import Any, Dict, Optional
 
 from langchain_core.messages import AIMessage
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
 from app.services.llm_service import LLMService
 
@@ -32,7 +32,7 @@ class BaseAgent(ABC):
     inherit from this class and implement the abstract execute() method.
 
     Attributes:
-        db (AsyncSession): Database session for agent operations
+        db (Session): Database session for agent operations
         user_id (int): User ID this agent is operating for
         agent_type (str): Type of agent (e.g., 'daily_summary', 'nutrition_coach')
         llm: LangChain LLM instance from LLMService
@@ -61,14 +61,14 @@ class BaseAgent(ABC):
 
     def __init__(
         self,
-        db_session: AsyncSession,
+        db_session: Session,
         user_id: int,
         agent_type: str,
     ):
         """Initialize the base agent.
 
         Args:
-            db_session: SQLAlchemy async database session
+            db_session: SQLAlchemy database session
             user_id: ID of the user this agent is operating for
             agent_type: Type identifier for this agent (e.g., 'daily_summary')
 

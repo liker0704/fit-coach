@@ -4,6 +4,7 @@ from datetime import datetime
 from typing import TYPE_CHECKING
 
 from sqlalchemy import Column, DateTime, ForeignKey, Integer, Numeric, String, Text, Time
+from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
@@ -39,6 +40,12 @@ class Meal(Base):
     # Details
     notes = Column(Text)
     photo_url = Column(String(500))
+
+    # Photo processing (Vision Agent)
+    photo_path = Column(String(500))  # Local file path for uploaded photo
+    photo_processing_status = Column(String(20), default="pending")  # pending/processing/completed/failed
+    photo_processing_error = Column(Text)  # Error message if failed
+    ai_recognized_items = Column(JSONB)  # JSON array of recognized food items
 
     # AI
     ai_summary = Column(Text)
