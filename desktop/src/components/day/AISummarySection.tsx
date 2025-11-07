@@ -2,9 +2,9 @@ import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { aiService } from '@/services/modules/aiService';
+import { agentsService } from '@/services/modules/agentsService';
 import type { Day } from '@/types/models/health';
-import { Sparkles, Loader2, RefreshCw } from 'lucide-react';
+import { Sparkles, Loader2, RefreshCw, Lightbulb } from 'lucide-react';
 
 interface AISummarySectionProps {
   day: Day;
@@ -23,13 +23,19 @@ const renderStars = (score: number) => {
 export function AISummarySection({ day }: AISummarySectionProps) {
   const { toast } = useToast();
   const [summary, setSummary] = useState<string>(day.summary || '');
+  const [highlights, setHighlights] = useState<string[]>([]);
+  const [recommendations, setRecommendations] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
   const generateSummary = async () => {
     setLoading(true);
     try {
-      const result = await aiService.generateSummary(day.id);
-      setSummary(result);
+      const result = await agentsService.generateDailySummary({
+        date: day.date,
+      });
+      setSummary(result.summary);
+      setHighlights(result.highlights || []);
+      setRecommendations(result.recommendations || []);
       toast({
         title: 'Success',
         description: 'AI summary generated successfully',
@@ -108,6 +114,7 @@ export function AISummarySection({ day }: AISummarySectionProps) {
             </div>
           ) : summary ? (
             <div className="space-y-4">
+              {/* Main Summary */}
               <div className="bg-gradient-to-br from-purple-50 to-blue-50 dark:from-purple-950/30 dark:to-blue-950/30 p-6 rounded-lg border border-purple-200 dark:border-purple-800">
                 <div className="prose prose-sm max-w-none dark:prose-invert">
                   <p className="text-base leading-relaxed whitespace-pre-wrap">
@@ -116,16 +123,54 @@ export function AISummarySection({ day }: AISummarySectionProps) {
                 </div>
               </div>
 
-              {/* LLM Advice (if available) */}
-              {day.llm_advice && (
+              {/* Highlights */}
+              {highlights.length > 0 && (
+                <div className="bg-green-50 dark:bg-green-950/30 p-4 rounded-lg border border-green-200 dark:border-green-800">
+                  <div className="flex items-start gap-3">
+                    <div className="text-2xl">🌟</div>
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold mb-2 text-green-900 dark:text-green-100">
+                        Today's Highlights:
+                      </p>
+                      <ul className="text-sm text-green-800 dark:text-green-200 space-y-1">
+                        {highlights.map((highlight, index) => (
+                          <li key={index}>• {highlight}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Recommendations */}
+              {recommendations.length > 0 && (
                 <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <div className="flex items-start gap-3">
+                    <Lightbulb className="h-6 w-6 text-blue-600 dark:text-blue-400 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm font-semibold mb-2 text-blue-900 dark:text-blue-100">
+                        Recommendations for Tomorrow:
+                      </p>
+                      <ul className="text-sm text-blue-800 dark:text-blue-200 space-y-1">
+                        {recommendations.map((rec, index) => (
+                          <li key={index}>• {rec}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* LLM Advice (legacy field if available) */}
+              {day.llm_advice && (
+                <div className="bg-amber-50 dark:bg-amber-950/30 p-4 rounded-lg border border-amber-200 dark:border-amber-800">
                   <div className="flex items-start gap-3">
                     <div className="text-2xl">💡</div>
                     <div className="flex-1">
-                      <p className="text-sm font-semibold mb-1 text-blue-900 dark:text-blue-100">
+                      <p className="text-sm font-semibold mb-1 text-amber-900 dark:text-amber-100">
                         Micro-step for tomorrow:
                       </p>
-                      <p className="text-sm text-blue-800 dark:text-blue-200">
+                      <p className="text-sm text-amber-800 dark:text-amber-200">
                         {day.llm_advice}
                       </p>
                     </div>
