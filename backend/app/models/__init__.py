@@ -1,6 +1,8 @@
 """Models package."""
 
 # Import all models here for Alembic autogenerate
+from app.models.agent_cost import AgentCost
+from app.models.agent_memory import AgentMemory
 from app.models.day import Day
 from app.models.exercise import Exercise, ExerciseSet
 from app.models.goal import Goal
@@ -29,4 +31,6 @@ __all__ = [
     "Goal",
     "RefreshToken",
     "Notification",
+    "AgentCost",
+    "AgentMemory",
 ]

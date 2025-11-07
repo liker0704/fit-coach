@@ -9,10 +9,19 @@ passlib==1.7.4
 bcrypt>=4.0.0,<5.0.0
 python-multipart==0.0.9
 redis==5.0.1
-langchain==0.1.6
-langchain-openai==0.0.5
-langchain-google-genai==0.0.5
+langchain>=1.0.3
+langchain-openai>=1.0.1
 python-dotenv==1.0.1
+langgraph>=1.0.2
+tavily-python>=0.7.12
+pillow>=12.0.0
+websockets>=15.0.1
+openai>=1.12.0
+
+# Note: google-generativeai and langchain-google-genai were removed due to
+# version conflicts with langgraph 1.x which requires langchain-core>=1.0.0
+# If Google Gemini integration is needed, consider using langchain-openai
+# with OpenAI-compatible endpoints or wait for updated compatible versions
 
 # Dev dependencies
 pytest>=7.4.0

@@ -9,6 +9,7 @@ from sqlalchemy.orm import relationship
 from app.core.database import Base
 
 if TYPE_CHECKING:
+    from app.models.agent_memory import AgentMemory
     from app.models.day import Day
     from app.models.goal import Goal
     from app.models.notification import Notification
@@ -60,6 +61,9 @@ class User(Base):
     )
     notifications = relationship(
         "Notification", back_populates="user", cascade="all, delete-orphan"
+    )
+    agent_memories = relationship(
+        "AgentMemory", back_populates="user", cascade="all, delete-orphan"
     )
 
     def __repr__(self):
