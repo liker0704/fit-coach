@@ -21,6 +21,11 @@ export const dayService = {
     return response.data;
   },
 
+  updateDay: async (dayId: number, data: Partial<Pick<Day, 'tag' | 'feeling' | 'effort_score' | 'weight' | 'summary'>>): Promise<Day> => {
+    const response = await apiClient.put(`/days/${dayId}`, data);
+    return response.data;
+  },
+
   deleteDay: async (dayId: number): Promise<void> => {
     await apiClient.delete(`/days/${dayId}`);
   },

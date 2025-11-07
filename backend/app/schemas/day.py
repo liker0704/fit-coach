@@ -21,6 +21,7 @@ class DayBase(BaseModel):
     tag: Optional[str] = Field(None, max_length=50)
     feeling: Optional[int] = Field(None, ge=1, le=5)
     effort_score: Optional[Decimal] = Field(None, ge=0, le=10)
+    weight: Optional[Decimal] = Field(None, gt=0, le=500)
     summary: Optional[str] = None
 
 
@@ -31,6 +32,7 @@ class DayCreate(DayBase):
     tag: Optional[str] = Field(None, max_length=50)
     feeling: Optional[int] = Field(None, ge=1, le=5)
     effort_score: Optional[Decimal] = Field(None, ge=0, le=10)
+    weight: Optional[Decimal] = Field(None, gt=0, le=500)
     summary: Optional[str] = None
 
 
@@ -40,6 +42,7 @@ class DayUpdate(BaseModel):
     tag: Optional[str] = Field(None, max_length=50)
     feeling: Optional[int] = Field(None, ge=1, le=5)
     effort_score: Optional[Decimal] = Field(None, ge=0, le=10)
+    weight: Optional[Decimal] = Field(None, gt=0, le=500)
     summary: Optional[str] = None
     llm_advice: Optional[str] = None
 

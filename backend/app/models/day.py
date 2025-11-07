@@ -35,6 +35,7 @@ class Day(Base):
     tag = Column(String(50))
     feeling = Column(Integer)  # 1-5
     effort_score = Column(Numeric(3, 1))  # 0-10
+    weight = Column(Numeric(5, 2))  # kg, optional daily weight measurement
 
     # Summary
     summary = Column(Text)

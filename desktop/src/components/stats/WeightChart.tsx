@@ -22,16 +22,23 @@ const WeightChartComponent = ({ days }: WeightChartProps) => {
   const chartWidth = width > 100 ? Math.min(width - 40, 550) : 550;
 
   // Transform days to chart data
-  // For now, using placeholder weight data (75kg)
-  // In the future, this should extract from user profile updates
   const data = useMemo(
     () =>
-      days.map((day) => ({
-        date: format(new Date(day.date), 'MM/dd'),
-        weight: 75, // Placeholder - extract from user profile in future
-      })),
+      days
+        .filter((day) => day.weight != null) // Only include days with weight recorded
+        .map((day) => ({
+          date: format(new Date(day.date), 'MM/dd'),
+          weight: Number(day.weight),
+        })),
     [days]
   );
+
+  // Calculate dynamic Y-axis domain based on actual weight data
+  const weights = data.map((d) => d.weight);
+  const minWeight = weights.length > 0 ? Math.min(...weights) : 60;
+  const maxWeight = weights.length > 0 ? Math.max(...weights) : 80;
+  const padding = 5; // Add 5kg padding
+  const yDomain = [Math.max(0, minWeight - padding), maxWeight + padding];
 
   return (
     <Card ref={containerRef}>
@@ -39,26 +46,26 @@ const WeightChartComponent = ({ days }: WeightChartProps) => {
         <CardTitle>Weight Trend</CardTitle>
       </CardHeader>
       <CardContent>
-        <LineChart data={data} width={chartWidth} height={300}>
-          <XAxis dataKey="date" />
-          <YAxis domain={[60, 80]} />
-          <Tooltip />
-          <Legend />
-          <ReferenceLine
-            y={70}
-            stroke="red"
-            strokeDasharray="3 3"
-            label="Target"
-          />
-          <Line
-            type="monotone"
-            dataKey="weight"
-            stroke="#8884d8"
-            strokeWidth={2}
-            dot={false}
-            isAnimationActive={false}
-          />
-        </LineChart>
+        {data.length === 0 ? (
+          <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+            <p>No weight data recorded yet. Add weight in the daily view to see your trend.</p>
+          </div>
+        ) : (
+          <LineChart data={data} width={chartWidth} height={300}>
+            <XAxis dataKey="date" />
+            <YAxis domain={yDomain} />
+            <Tooltip />
+            <Legend />
+            <Line
+              type="monotone"
+              dataKey="weight"
+              stroke="#8884d8"
+              strokeWidth={2}
+              dot={{ fill: '#8884d8', r: 4 }}
+              isAnimationActive={false}
+            />
+          </LineChart>
+        )}
       </CardContent>
     </Card>
   );

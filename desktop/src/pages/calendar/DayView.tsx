@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { dayService } from '@/services/modules/dayService';
@@ -22,6 +23,7 @@ import {
   Sparkles,
   ArrowLeft,
   Loader2,
+  Scale,
 } from 'lucide-react';
 
 export default function DayView() {
@@ -32,6 +34,8 @@ export default function DayView() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [activeTab, setActiveTab] = useState('meals');
+  const [weightInput, setWeightInput] = useState<string>('');
+  const [isUpdatingWeight, setIsUpdatingWeight] = useState(false);
 
   const fetchDay = async () => {
     if (!dayId) return;
@@ -58,6 +62,44 @@ export default function DayView() {
   useEffect(() => {
     fetchDay();
   }, [dayId]);
+
+  useEffect(() => {
+    if (day?.weight) {
+      setWeightInput(day.weight.toString());
+    }
+  }, [day?.weight]);
+
+  const handleWeightSave = async () => {
+    if (!day || !dayId) return;
+
+    const weight = parseFloat(weightInput);
+    if (isNaN(weight) || weight <= 0 || weight > 500) {
+      toast({
+        title: 'Invalid Weight',
+        description: 'Please enter a valid weight between 1 and 500 kg',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    try {
+      setIsUpdatingWeight(true);
+      await dayService.updateDay(Number(dayId), { weight });
+      setDay({ ...day, weight });
+      toast({
+        title: 'Success',
+        description: 'Weight updated successfully',
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to update weight',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsUpdatingWeight(false);
+    }
+  };
 
   if (loading) {
     return (
@@ -111,12 +153,41 @@ export default function DayView() {
               <p className="text-muted-foreground mt-1">Tag: {day.tag}</p>
             )}
           </div>
-          {day.feeling && (
+          <div className="flex gap-4 items-end">
+            {/* Weight Input */}
             <div className="text-right">
-              <p className="text-sm text-muted-foreground">Feeling</p>
-              <p className="text-2xl">{'😊'.repeat(day.feeling)}</p>
+              <p className="text-sm text-muted-foreground mb-1 flex items-center gap-1">
+                <Scale className="h-3 w-3" />
+                Weight (kg)
+              </p>
+              <div className="flex items-center gap-2">
+                <Input
+                  type="number"
+                  value={weightInput}
+                  onChange={(e) => setWeightInput(e.target.value)}
+                  onBlur={handleWeightSave}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      handleWeightSave();
+                    }
+                  }}
+                  placeholder="Enter weight"
+                  className="w-28 h-9"
+                  step="0.1"
+                  min="1"
+                  max="500"
+                  disabled={isUpdatingWeight}
+                />
+              </div>
             </div>
-          )}
+            {/* Feeling */}
+            {day.feeling && (
+              <div className="text-right">
+                <p className="text-sm text-muted-foreground">Feeling</p>
+                <p className="text-2xl">{'😊'.repeat(day.feeling)}</p>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

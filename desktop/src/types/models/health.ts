@@ -5,6 +5,7 @@ export interface Day {
   tag?: string | null;
   feeling?: number | null;
   effort_score?: number | null;
+  weight?: number | null;
   summary?: string | null;
   llm_advice?: string | null;
   notes: Note[];
