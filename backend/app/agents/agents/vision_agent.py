@@ -16,7 +16,7 @@ from decimal import Decimal
 from typing import Any, Dict, List, Optional, TypedDict
 
 from langgraph.graph import END, StateGraph
-from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.orm import Session
 
 from app.agents.base import BaseAgent
 from app.agents.tools.search_tools import search_nutrition_info
@@ -94,11 +94,11 @@ class VisionAgent(BaseAgent):
         ```
     """
 
-    def __init__(self, db_session: AsyncSession, user_id: int):
+    def __init__(self, db_session: Session, user_id: int):
         """Initialize Vision Agent.
 
         Args:
-            db_session: SQLAlchemy async database session
+            db_session: SQLAlchemy database session
             user_id: ID of the user this agent operates for
         """
         super().__init__(db_session, user_id, "vision")
@@ -419,12 +419,12 @@ class VisionAgent(BaseAgent):
             if not totals:
                 raise ValueError("No totals calculated")
 
-            # Prepare AI summary with recognized items
-            ai_recognized_items = {
-                "items": state["recognized_items"],
-                "confidence": state["confidence"],
-                "needs_review": len(state.get("needs_web_search", [])) > 0
-            }
+            # Prepare AI recognized items data
+            ai_recognized_items = state["recognized_items"]
+
+            # Prepare AI summary text
+            item_names = [item.get("name", "unknown") for item in state["recognized_items"]]
+            ai_summary = f"Recognized {len(item_names)} items: {', '.join(item_names)}"
 
             # Create Meal
             meal = Meal(
@@ -437,13 +437,15 @@ class VisionAgent(BaseAgent):
                 fiber=Decimal(str(totals.get("fiber", 0.0))),
                 sugar=Decimal(str(totals.get("sugar", 0.0))),
                 sodium=Decimal(str(totals.get("sodium", 0.0))),
-                photo_url=state["photo_path"],  # Using photo_url since photo_path doesn't exist
-                ai_summary=json.dumps(ai_recognized_items),  # Store recognized items here
+                photo_path=state["photo_path"],
+                photo_processing_status="completed",
+                ai_recognized_items=ai_recognized_items,
+                ai_summary=ai_summary,
                 notes="Auto-generated from photo analysis"
             )
 
             self.db.add(meal)
-            await self.db.flush()  # Get the meal ID
+            self.db.flush()  # Get the meal ID
 
             logger.info(f"Created meal ID: {meal.id}")
 
@@ -479,7 +481,7 @@ class VisionAgent(BaseAgent):
                     # Continue with other items
 
             # Commit transaction
-            await self.db.commit()
+            self.db.commit()
 
             state["meal_id"] = meal.id
             state["success"] = True
@@ -491,7 +493,7 @@ class VisionAgent(BaseAgent):
 
         except Exception as e:
             logger.error(f"Error creating meal in database: {e}", exc_info=True)
-            await self.db.rollback()
+            self.db.rollback()
             state["error"] = f"Database error: {str(e)}"
             state["success"] = False
 
@@ -532,30 +534,32 @@ class VisionAgent(BaseAgent):
                 logger.info("Attempting to save partial results to database")
 
                 # Create a meal with partial data
-                ai_recognized_items = {
-                    "items": state["recognized_items"],
-                    "confidence": state["confidence"],
-                    "needs_review": True,
-                    "error": state.get("error")
-                }
+                ai_recognized_items_list = state["recognized_items"]
+
+                # Add metadata to items
+                for item in ai_recognized_items_list:
+                    item["needs_review"] = True
 
                 meal = Meal(
                     day_id=state["day_id"],
                     category=state["category"],
-                    photo_url=state["photo_path"],
-                    ai_summary=json.dumps(ai_recognized_items),
+                    photo_path=state["photo_path"],
+                    photo_processing_status="failed",
+                    photo_processing_error=state.get("error"),
+                    ai_recognized_items=ai_recognized_items_list,
+                    ai_summary=f"Partial recognition: {len(ai_recognized_items_list)} items need review",
                     notes="Partial results - needs manual review"
                 )
 
                 self.db.add(meal)
-                await self.db.commit()
+                self.db.commit()
 
                 state["meal_id"] = meal.id
                 logger.info(f"Saved partial results as meal ID: {meal.id}")
 
             except Exception as e:
                 logger.error(f"Failed to save partial results: {e}", exc_info=True)
-                await self.db.rollback()
+                self.db.rollback()
 
         return state
 

@@ -5,6 +5,7 @@ import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 import { mealsService } from '@/services/modules/mealsService';
 import { MealForm } from './MealForm';
+import { MealPhotoUpload } from './MealPhotoUpload';
 import { DeleteConfirmDialog } from '@/components/ui/DeleteConfirmDialog';
 import type { Day, Meal } from '@/types/models/health';
 import { Utensils, Trash2, Clock } from 'lucide-react';
@@ -184,7 +185,10 @@ export function MealsSection({ day, onUpdate }: MealsSectionProps) {
           <Utensils className="h-5 w-5" />
           Meals
         </h2>
-        <MealForm dayId={day.id} onSuccess={onUpdate} />
+        <div className="flex gap-2">
+          <MealPhotoUpload dayId={day.id} onSuccess={onUpdate} />
+          <MealForm dayId={day.id} onSuccess={onUpdate} />
+        </div>
       </div>
 
       {/* Meals by Category */}
