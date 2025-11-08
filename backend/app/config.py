@@ -110,5 +110,13 @@ class Settings(BaseSettings):
     MEAL_PHOTOS_DIR: str = "uploads/meal_photos"
     MAX_PHOTO_SIZE_MB: int = 10
 
+    # Email Configuration
+    ENABLE_EMAIL: bool = False  # Set to True in production
+    SMTP_HOST: str = "smtp.gmail.com"  # Default to Gmail
+    SMTP_PORT: int = 587
+    SMTP_USER: Optional[str] = None  # Email address to send from
+    SMTP_PASSWORD: Optional[str] = None  # App password for SMTP
+    FRONTEND_URL: str = "http://localhost:5173"  # Frontend URL for email links
+
 
 settings = Settings()

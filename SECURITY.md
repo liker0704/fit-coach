@@ -46,11 +46,24 @@ If you discover a security vulnerability, please email us at **security@fitcoach
    - Max length enforcement
    - Email format validation
 
-6. **API Security**
-   - Rate limiting recommended (see below)
+6. **API Security** ✅
+   - Rate limiting with slowapi (10/min for auth endpoints) ✅
    - Request size limits
    - File upload validation (size, type)
    - No debug endpoints in production ✅
+
+7. **Email Service** ✅
+   - SMTP-based email delivery for password reset and verification
+   - No tokens exposed in API responses (sent via email only)
+   - Support for Gmail, SendGrid, AWS SES, and other SMTP providers
+   - Configurable via environment variables
+
+8. **Audit Logging** ✅
+   - Comprehensive audit trail for security events
+   - Logs authentication events (login, logout, registration)
+   - Tracks password resets and email verifications
+   - Stores IP address, user agent, and metadata
+   - Database-backed with indexed queries for analysis
 
 ### Mobile App (React Native)
 
@@ -88,7 +101,46 @@ POSTGRES_PASSWORD=<strong-database-password>
 GOOGLE_API_KEY=<your-api-key>  # or OPENAI_API_KEY
 ```
 
-### 2. Production Checklist
+### 2. Email Service Configuration ✅
+
+**Development (Email disabled by default):**
+```bash
+ENABLE_EMAIL=false  # Tokens logged to console instead
+```
+
+**Production (Email enabled):**
+
+Option 1: Gmail SMTP
+```bash
+ENABLE_EMAIL=true
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USER=your_email@gmail.com
+SMTP_PASSWORD=your_app_password  # Generate at https://myaccount.google.com/apppasswords
+FRONTEND_URL=https://your-domain.com
+```
+
+Option 2: SendGrid
+```bash
+ENABLE_EMAIL=true
+SMTP_HOST=smtp.sendgrid.net
+SMTP_PORT=587
+SMTP_USER=apikey
+SMTP_PASSWORD=your_sendgrid_api_key
+FRONTEND_URL=https://your-domain.com
+```
+
+Option 3: AWS SES
+```bash
+ENABLE_EMAIL=true
+SMTP_HOST=email-smtp.us-east-1.amazonaws.com
+SMTP_PORT=587
+SMTP_USER=your_aws_smtp_username
+SMTP_PASSWORD=your_aws_smtp_password
+FRONTEND_URL=https://your-domain.com
+```
+
+### 3. Production Checklist
 
 Before deploying to production:
 
@@ -98,8 +150,13 @@ Before deploying to production:
 - [ ] Set `POSTGRES_SERVER` to production database host
 - [ ] Update `CORS_ORIGINS` to **only** your production frontend domain
 - [ ] Enable HTTPS/TLS (disable HTTP)
-- [ ] Set up rate limiting (see recommendations below)
+- [x] Rate limiting configured (10/min auth endpoints) ✅
 - [ ] Enable HSTS header: `Strict-Transport-Security: max-age=31536000; includeSubDomains`
+- [x] Email service configured (ENABLE_EMAIL=true, SMTP settings) ✅
+- [ ] Set FRONTEND_URL to production domain
+- [x] Audit logging enabled (database table created) ✅
+- [ ] Run database migration: `alembic upgrade head`
+- [ ] Install dependencies: `pip install -r requirements.txt`
 - [ ] Review file upload limits and storage
 - [ ] Set up database backups
 - [ ] Configure logging and monitoring
@@ -118,40 +175,31 @@ Before deploying to production:
 - [ ] Test auto-updates security
 - [ ] Review Electron security settings
 
-## ⚠️ Known Limitations (MVP)
+## ⚠️ Known Limitations
 
-The following features are **NOT** implemented in MVP but should be added for production:
+The following features should be considered for production:
 
 ### High Priority
 
-1. **Rate Limiting**
-   - No rate limiting on auth endpoints (brute force risk)
-   - **Recommendation**: Add `slowapi` or similar
-   ```python
-   from slowapi import Limiter
-   from slowapi.util import get_remote_address
+1. ✅ **Rate Limiting** - IMPLEMENTED
+   - Rate limiting active on all auth endpoints (10/min for login/register, 5/min for password reset)
+   - Using slowapi library with IP-based rate limiting
+   - Returns 429 status code with retry-after header
 
-   limiter = Limiter(key_func=get_remote_address)
-   app.state.limiter = limiter
+2. ✅ **Email Service** - IMPLEMENTED
+   - Password reset tokens sent via email (no longer in API response)
+   - Email verification tokens sent via email
+   - SMTP-based delivery with support for Gmail, SendGrid, AWS SES
+   - Configurable via ENABLE_EMAIL environment variable
 
-   @router.post("/login")
-   @limiter.limit("5/minute")
-   def login(...):
-       ...
-   ```
+3. ✅ **Audit Logging** - IMPLEMENTED
+   - Comprehensive audit trail for security events
+   - Logs all authentication events with IP and user agent
+   - Database-backed with indexed queries
 
-2. **Email Verification**
-   - Password reset tokens returned in API response (MVP only)
-   - Email verification tokens returned in API response (MVP only)
-   - **In Production**: Integrate email service (SendGrid, AWS SES, etc.)
-
-3. **Account Lockout**
+4. **Account Lockout**
    - No account lockout after failed login attempts
-   - **Recommendation**: Add lockout after 5 failed attempts
-
-4. **Audit Logging**
-   - No audit trail for sensitive operations
-   - **Recommendation**: Log auth events, profile changes, etc.
+   - **Recommendation**: Add lockout after 5 failed attempts (can use audit logs to implement)
 
 ### Medium Priority
 

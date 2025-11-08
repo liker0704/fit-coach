@@ -1,10 +1,13 @@
 """Authentication endpoints."""
 
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 
 from app.core.dependencies import get_current_user, get_db
+from app.core.rate_limit import limiter
 from app.models.user import User
+from app.services.email_service import EmailService
+from app.services.audit_service import AuditService
 from app.schemas.auth import (
     EmailVerificationRequest,
     EmailVerificationResponse,
@@ -21,7 +24,9 @@ router = APIRouter()
 
 
 @router.post("/register", response_model=UserResponse, status_code=status.HTTP_201_CREATED)
+@limiter.limit("10/minute")
 def register(
+    request: Request,
     user_data: UserCreate,
     db: Session = Depends(get_db),
 ):
@@ -39,6 +44,10 @@ def register(
     """
     try:
         user = AuthService.create_user(db, user_data)
+
+        # Log successful registration
+        AuditService.log_registration(db, user.id, user.email, request)
+
         return user
     except ValueError as e:
         raise HTTPException(
@@ -48,7 +57,9 @@ def register(
 
 
 @router.post("/login", response_model=Token)
+@limiter.limit("10/minute")
 def login(
+    request: Request,
     credentials: UserLogin,
     db: Session = Depends(get_db),
 ):
@@ -66,6 +77,9 @@ def login(
     """
     user = AuthService.authenticate_user(db, credentials.email, credentials.password)
     if not user:
+        # Log failed login attempt
+        AuditService.log_login_failure(db, credentials.email, "Invalid credentials", request)
+
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Incorrect email or password",
@@ -73,10 +87,16 @@ def login(
         )
 
     if not user.is_active:
+        # Log failed login attempt
+        AuditService.log_login_failure(db, credentials.email, "Account inactive", request)
+
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User account is inactive",
         )
+
+    # Log successful login
+    AuditService.log_login_success(db, user.id, user.email, request)
 
     tokens = AuthService.create_tokens(db, user)
     return tokens
@@ -127,6 +147,10 @@ def logout(
         Success message
     """
     AuthService.revoke_refresh_token(db, request.refresh_token)
+
+    # Log logout
+    AuditService.log_logout(db, current_user.id, current_user.email, None)
+
     return {"message": "Successfully logged out"}
 
 
@@ -164,13 +188,16 @@ def get_current_user_info(
 
 
 @router.post("/forgot-password")
+@limiter.limit("5/minute")
 def forgot_password(
+    http_request: Request,
     request: PasswordReset,
     db: Session = Depends(get_db),
 ):
     """Request a password reset token.
 
     Args:
+        http_request: HTTP request object (for rate limiting)
         request: Password reset request with email
         db: Database session
 
@@ -179,22 +206,30 @@ def forgot_password(
     """
     token = AuthService.create_password_reset_token(db, request.email)
 
+    # Send email with reset token
+    if token:
+        EmailService.send_password_reset_email(request.email, token)
+
+    # Log password reset request
+    AuditService.log_password_reset_request(db, request.email, http_request)
+
     # Always return success message to avoid revealing if email exists
-    # TODO: In production, send token via email instead of returning it
     return {
-        "message": "If the email exists, a password reset link has been sent",
-        "token": token  # TODO: Remove in production, send via email instead
+        "message": "If the email exists, a password reset link has been sent"
     }
 
 
 @router.post("/reset-password")
+@limiter.limit("10/minute")
 def reset_password(
+    http_request: Request,
     request: PasswordResetConfirm,
     db: Session = Depends(get_db),
 ):
     """Reset password using a reset token.
 
     Args:
+        http_request: HTTP request object (for rate limiting and audit logging)
         request: Password reset confirmation with token and new password
         db: Database session
 
@@ -204,15 +239,18 @@ def reset_password(
     Raises:
         HTTPException: If token is invalid or expired
     """
-    success = AuthService.reset_password_with_token(
+    user = AuthService.reset_password_with_token(
         db, request.token, request.new_password
     )
 
-    if not success:
+    if not user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Invalid or expired reset token"
         )
+
+    # Log successful password reset
+    AuditService.log_password_reset_complete(db, user.id, user.email, http_request)
 
     return {"message": "Password has been reset successfully"}
 
@@ -259,7 +297,7 @@ def resend_verification(
         db: Database session
 
     Returns:
-        Success message with token (MVP only)
+        Success message
 
     Raises:
         HTTPException: If email is already verified
@@ -272,8 +310,9 @@ def resend_verification(
             detail="Email is already verified or user not found"
         )
 
-    # TODO: In production, send token via email instead of returning it
+    # Send verification email
+    EmailService.send_verification_email(current_user.email, token)
+
     return EmailVerificationResponse(
-        message="Verification email sent successfully",
-        token=token  # MVP only - remove in production
+        message="Verification email sent successfully"
     )

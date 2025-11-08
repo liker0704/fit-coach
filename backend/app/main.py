@@ -2,8 +2,10 @@
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
+from slowapi.errors import RateLimitExceeded
 
 from app.core.security_middleware import SecurityHeadersMiddleware
+from app.core.rate_limit import limiter, rate_limit_exceeded_handler
 from app.api.v1.agents import router as agents_router
 from app.api.v1.ai import router as ai_router
 from app.api.v1.auth import router as auth_router
@@ -27,6 +29,10 @@ app = FastAPI(
     redoc_url="/api/redoc",
     openapi_url=f"{settings.API_V1_PREFIX}/openapi.json",
 )
+
+# Rate limiting configuration
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, rate_limit_exceeded_handler)
 
 # Security Headers Middleware (apply first)
 app.add_middleware(SecurityHeadersMiddleware)
