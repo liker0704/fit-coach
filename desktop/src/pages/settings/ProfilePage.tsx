@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { useStore } from '@/store';
 import { useShallow } from 'zustand/react/shallow';
 import { userService } from '@/services/modules/userService';
@@ -28,6 +29,7 @@ interface FormData {
 }
 
 export default function ProfilePage() {
+  const { t, i18n } = useTranslation();
   const { user, logout, setUser } = useStore(
     useShallow(state => ({ user: state.user, logout: state.logout, setUser: state.setUser }))
   );
@@ -46,7 +48,7 @@ export default function ProfilePage() {
     water_goal: user?.water_goal || 2.5,
     calorie_goal: user?.calorie_goal || 2000,
     sleep_goal: user?.sleep_goal || 7.5,
-    language: 'EN',
+    language: i18n.language || 'en',
     notifications_enabled: false,
     reminder_time: '21:00',
   });
@@ -159,6 +161,16 @@ export default function ProfilePage() {
 
   const handleInputChange = (field: keyof FormData, value: string | number | boolean) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+
+    // Handle language change
+    if (field === 'language' && typeof value === 'string') {
+      i18n.changeLanguage(value);
+      toast({
+        title: 'Language Changed',
+        description: 'Language has been updated successfully',
+      });
+    }
+
     // Clear error for this field
     if (errors[field]) {
       setErrors(prev => {
@@ -171,17 +183,17 @@ export default function ProfilePage() {
 
   return (
     <div className="container max-w-2xl mx-auto p-6 h-full overflow-y-auto">
-      <h1 className="text-3xl font-bold mb-6">Profile & Settings</h1>
+      <h1 className="text-3xl font-bold mb-6">{t('profile.personalInfo')}</h1>
 
       <form onSubmit={handleSubmit} className="space-y-6">
         {/* Personal Information */}
         <Card>
           <CardHeader>
-            <CardTitle>Personal Information</CardTitle>
+            <CardTitle>{t('profile.personalInfo')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="full_name">Full Name</Label>
+              <Label htmlFor="full_name">{t('auth.fullName')}</Label>
               <Input
                 id="full_name"
                 value={formData.full_name}
@@ -281,11 +293,11 @@ export default function ProfilePage() {
         {/* Health Goals */}
         <Card>
           <CardHeader>
-            <CardTitle>Health Goals</CardTitle>
+            <CardTitle>{t('profile.healthGoals')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div>
-              <Label htmlFor="water_goal">Daily Water Goal (liters)</Label>
+              <Label htmlFor="water_goal">{t('profile.waterGoal')}</Label>
               <Input
                 id="water_goal"
                 type="number"
@@ -340,11 +352,11 @@ export default function ProfilePage() {
         {/* App Settings */}
         <Card>
           <CardHeader>
-            <CardTitle>App Settings</CardTitle>
+            <CardTitle>{t('profile.appSettings')}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="space-y-2">
-              <Label>Theme</Label>
+              <Label>{t('profile.theme')}</Label>
               <div className="flex gap-2">
                 <Button
                   type="button"
@@ -378,7 +390,7 @@ export default function ProfilePage() {
             </div>
 
             <div>
-              <Label htmlFor="language">Language</Label>
+              <Label htmlFor="language">{t('profile.language')}</Label>
               <Select
                 value={formData.language}
                 onValueChange={(value) => handleInputChange('language', value)}
@@ -387,18 +399,18 @@ export default function ProfilePage() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="EN">English</SelectItem>
-                  <SelectItem value="RU">Русский</SelectItem>
-                  <SelectItem value="CZ">Čeština</SelectItem>
+                  <SelectItem value="en">English</SelectItem>
+                  <SelectItem value="ru">Русский</SelectItem>
+                  <SelectItem value="cz">Čeština</SelectItem>
                 </SelectContent>
               </Select>
-              <p className="text-sm text-gray-500 mt-1">Language support will be implemented in future</p>
+              <p className="text-sm text-gray-500 mt-1">Language changes apply instantly</p>
             </div>
 
             <div className="space-y-2">
               <div className="flex items-center justify-between">
                 <div className="space-y-0.5">
-                  <Label>Daily Reminder</Label>
+                  <Label>{t('profile.dailyReminder')}</Label>
                   <p className="text-sm text-gray-500">
                     Get reminded to log your day
                   </p>
@@ -430,7 +442,7 @@ export default function ProfilePage() {
         {/* Actions */}
         <div className="flex gap-4">
           <Button type="submit" disabled={loading} className="flex-1">
-            {loading ? 'Saving...' : 'Save Changes'}
+            {loading ? t('common.loading') : t('common.save')}
           </Button>
           <Button
             type="button"
@@ -438,7 +450,7 @@ export default function ProfilePage() {
             onClick={handleLogout}
             className="flex-1"
           >
-            Logout
+            {t('auth.logout')}
           </Button>
         </div>
       </form>
