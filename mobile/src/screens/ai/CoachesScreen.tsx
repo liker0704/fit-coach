@@ -24,25 +24,57 @@ export default function CoachesScreen() {
     setIsLoading(true);
     setResponse(null);
 
+    const today = new Date().toISOString().split('T')[0];
+
+    // Create placeholder for streaming response
+    setResponse({
+      advice: '',
+      recommendations: [],
+    });
+
+    let accumulatedContent = '';
+
     try {
-      const today = new Date().toISOString().split('T')[0];
-      let data: CoachResponse;
+      const streamMethod =
+        type === 'nutrition'
+          ? agentService.streamNutritionAdvice
+          : agentService.streamWorkoutAdvice;
 
-      if (type === 'nutrition') {
-        data = await agentService.getNutritionAdvice(today, question || undefined);
-      } else {
-        data = await agentService.getWorkoutAdvice(today, question || undefined);
-      }
-
-      setResponse(data);
+      await streamMethod(
+        question || 'Provide general advice based on my recent data',
+        today,
+        // onChunk: accumulate and update response
+        (chunk: string) => {
+          accumulatedContent += chunk;
+          setResponse({
+            advice: accumulatedContent,
+            recommendations: [],
+          });
+        },
+        // onComplete
+        () => {
+          setIsLoading(false);
+        },
+        // onError
+        (error: Error) => {
+          console.error('Stream error:', error);
+          setResponse({
+            advice:
+              accumulatedContent ||
+              'Sorry, I encountered an error. Please try again or check your connection.',
+            recommendations: [],
+          });
+          setIsLoading(false);
+        }
+      );
     } catch (error) {
       console.error('Coach error:', error);
       setResponse({
         advice:
+          accumulatedContent ||
           'Sorry, I encountered an error. Please try again or check your connection.',
         recommendations: [],
       });
-    } finally {
       setIsLoading(false);
     }
   };

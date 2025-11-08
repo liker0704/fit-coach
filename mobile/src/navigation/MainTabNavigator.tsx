@@ -4,6 +4,8 @@ import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { createStackNavigator } from '@react-navigation/stack';
 import CalendarStackNavigator from './CalendarStackNavigator';
 import AIStackNavigator from './AIStackNavigator';
+import MealPlansStackNavigator from './MealPlansStackNavigator';
+import TrainingStackNavigator from './TrainingStackNavigator';
 import { colors } from '../theme/colors';
 
 // Import screens
@@ -14,6 +16,8 @@ export type MainTabParamList = {
   CalendarTab: undefined;
   StatsTab: undefined;
   AITab: undefined;
+  MealPlansTab: undefined;
+  TrainingTab: undefined;
   ProfileTab: undefined;
 };
 
@@ -113,6 +117,26 @@ export default function MainTabNavigator() {
           title: 'AI Coach',
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="robot" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="MealPlansTab"
+        component={MealPlansStackNavigator}
+        options={{
+          title: 'Meals',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="food-apple" size={size} color={color} />
+          ),
+        }}
+      />
+      <Tab.Screen
+        name="TrainingTab"
+        component={TrainingStackNavigator}
+        options={{
+          title: 'Training',
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="dumbbell" size={size} color={color} />
           ),
         }}
       />

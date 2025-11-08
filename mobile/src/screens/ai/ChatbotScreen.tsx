@@ -5,6 +5,7 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import {
   Text,
@@ -15,6 +16,7 @@ import {
 } from 'react-native-paper';
 import { colors, spacing, fontSizes } from '../../theme/colors';
 import { agentService, ChatMessage } from '../../services/api/agentService';
+import { VoiceService } from '../../services/voiceService';
 
 export default function ChatbotScreen() {
   const [messages, setMessages] = useState<ChatMessage[]>([
@@ -27,12 +29,57 @@ export default function ChatbotScreen() {
   ]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
   const scrollViewRef = useRef<ScrollView>(null);
 
   // Auto-scroll to bottom when new message added
   useEffect(() => {
     scrollViewRef.current?.scrollToEnd({ animated: true });
   }, [messages]);
+
+  const handleVoiceInput = async () => {
+    if (isRecording) {
+      // Stop recording and transcribe
+      try {
+        setIsRecording(false);
+        setIsTranscribing(true);
+
+        const audioUri = await VoiceService.stopRecording();
+        if (!audioUri) {
+          Alert.alert('Error', 'Failed to record audio');
+          setIsTranscribing(false);
+          return;
+        }
+
+        // Transcribe audio to text
+        const result = await VoiceService.speechToText(audioUri);
+        if (result.success && result.text) {
+          setInputText(result.text);
+        } else {
+          Alert.alert('Error', 'Failed to transcribe audio');
+        }
+
+        setIsTranscribing(false);
+      } catch (error) {
+        console.error('Voice input error:', error);
+        Alert.alert('Error', 'Failed to process voice input');
+        setIsTranscribing(false);
+      }
+    } else {
+      // Start recording
+      try {
+        await VoiceService.startRecording();
+        setIsRecording(true);
+      } catch (error) {
+        console.error('Recording error:', error);
+        Alert.alert(
+          'Error',
+          'Failed to start recording. Please check microphone permissions.'
+        );
+      }
+    }
+  };
 
   const handleSend = async () => {
     if (!inputText.trim() || isLoading) return;
@@ -180,20 +227,34 @@ export default function ChatbotScreen() {
         <TextInput
           value={inputText}
           onChangeText={setInputText}
-          placeholder="Type your message..."
+          placeholder={
+            isRecording
+              ? 'Recording...'
+              : isTranscribing
+              ? 'Transcribing...'
+              : 'Type your message...'
+          }
           mode="outlined"
           style={styles.input}
           multiline
           maxLength={500}
           onSubmitEditing={handleSend}
-          disabled={isLoading}
+          disabled={isLoading || isRecording || isTranscribing}
+        />
+        <IconButton
+          icon={isRecording ? 'stop' : 'microphone'}
+          size={24}
+          iconColor={isRecording ? colors.error : colors.primary}
+          onPress={handleVoiceInput}
+          disabled={isLoading || isTranscribing}
+          style={styles.voiceButton}
         />
         <IconButton
           icon="send"
           size={24}
           iconColor={colors.primary}
           onPress={handleSend}
-          disabled={!inputText.trim() || isLoading}
+          disabled={!inputText.trim() || isLoading || isRecording || isTranscribing}
           style={styles.sendButton}
         />
       </View>
@@ -277,6 +338,9 @@ const styles = StyleSheet.create({
     flex: 1,
     marginRight: spacing.sm,
     maxHeight: 100,
+  },
+  voiceButton: {
+    margin: 0,
   },
   sendButton: {
     margin: 0,
