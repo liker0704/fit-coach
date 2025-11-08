@@ -1,7 +1,18 @@
-import { contextBridge } from 'electron';
+import { contextBridge, ipcRenderer } from 'electron';
 
-// Minimal preload - app uses standard web APIs (axios, localStorage, React Router)
-// No custom IPC needed as there was no Tauri IPC in the original code
+interface NotificationSettings {
+  enabled: boolean;
+  reminderTime: string;
+}
+
+// Expose Electron APIs to renderer process
 contextBridge.exposeInMainWorld('electron', {
-  // Placeholder for future Electron-specific APIs if needed
+  notifications: {
+    updateSettings: (settings: NotificationSettings) =>
+      ipcRenderer.invoke('notifications:update-settings', settings),
+    getSettings: () =>
+      ipcRenderer.invoke('notifications:get-settings'),
+    test: () =>
+      ipcRenderer.invoke('notifications:test'),
+  },
 });

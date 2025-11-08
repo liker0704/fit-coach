@@ -72,6 +72,19 @@ export default function ProfilePage() {
     }
   }, [user]);
 
+  // Load notification settings from Electron
+  useEffect(() => {
+    if (window.electron?.notifications) {
+      window.electron.notifications.getSettings().then((settings) => {
+        setFormData(prev => ({
+          ...prev,
+          notifications_enabled: settings.enabled,
+          reminder_time: settings.reminderTime,
+        }));
+      });
+    }
+  }, []);
+
   const validateForm = (): boolean => {
     const newErrors: Record<string, string> = {};
 
@@ -160,16 +173,37 @@ export default function ProfilePage() {
   };
 
   const handleInputChange = (field: keyof FormData, value: string | number | boolean) => {
-    setFormData(prev => ({ ...prev, [field]: value }));
+    setFormData(prev => {
+      const newData = { ...prev, [field]: value };
 
-    // Handle language change
-    if (field === 'language' && typeof value === 'string') {
-      i18n.changeLanguage(value);
-      toast({
-        title: 'Language Changed',
-        description: 'Language has been updated successfully',
-      });
-    }
+      // Handle language change
+      if (field === 'language' && typeof value === 'string') {
+        i18n.changeLanguage(value);
+        toast({
+          title: 'Language Changed',
+          description: 'Language has been updated successfully',
+        });
+      }
+
+      // Handle notification settings change
+      if ((field === 'notifications_enabled' || field === 'reminder_time') && window.electron?.notifications) {
+        const notifSettings = {
+          enabled: field === 'notifications_enabled' ? Boolean(value) : newData.notifications_enabled,
+          reminderTime: field === 'reminder_time' ? String(value) : newData.reminder_time,
+        };
+
+        window.electron.notifications.updateSettings(notifSettings).then(() => {
+          toast({
+            title: 'Notifications Updated',
+            description: field === 'notifications_enabled'
+              ? (value ? 'Daily reminders enabled' : 'Daily reminders disabled')
+              : 'Reminder time updated',
+          });
+        });
+      }
+
+      return newData;
+    });
 
     // Clear error for this field
     if (errors[field]) {
@@ -424,7 +458,7 @@ export default function ProfilePage() {
               </div>
 
               {formData.notifications_enabled && (
-                <div className="ml-6">
+                <div className="ml-6 space-y-2">
                   <TimePicker24
                     label="Reminder Time"
                     value={formData.reminder_time}
@@ -432,9 +466,25 @@ export default function ProfilePage() {
                     placeholder="21:00"
                     className="w-40"
                   />
+                  {window.electron?.notifications && (
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        window.electron?.notifications.test().then(() => {
+                          toast({
+                            title: 'Test Notification Sent',
+                            description: 'Check your system notifications',
+                          });
+                        });
+                      }}
+                    >
+                      Test Notification
+                    </Button>
+                  )}
                 </div>
               )}
-              <p className="text-sm text-gray-500">Notifications will be implemented in future</p>
             </div>
           </CardContent>
         </Card>
