@@ -13,8 +13,10 @@ from app.api.v1.days import router as days_router
 from app.api.v1.exercises import router as exercises_router
 from app.api.v1.goals import router as goals_router
 from app.api.v1.meals import router as meals_router
+from app.api.v1.meal_plans import router as meal_plans_router
 from app.api.v1.moods import router as moods_router
 from app.api.v1.notes import router as notes_router
+from app.api.v1.training_programs import router as training_programs_router
 from app.api.v1.notifications import router as notifications_router
 from app.api.v1.sleep import router as sleep_router
 from app.api.v1.users import router as users_router
@@ -134,6 +136,18 @@ app.include_router(
     agents_router,
     prefix=f"{settings.API_V1_PREFIX}/agents",
     tags=["agents"],
+)
+
+app.include_router(
+    meal_plans_router,
+    prefix=f"{settings.API_V1_PREFIX}/meal-plans",
+    tags=["meal-plans"],
+)
+
+app.include_router(
+    training_programs_router,
+    prefix=f"{settings.API_V1_PREFIX}/training-programs",
+    tags=["training-programs"],
 )
 
 

@@ -1,9 +1,10 @@
 """Agent API endpoints."""
 
 import logging
-from typing import Any, Dict, Optional
+from typing import Any, AsyncIterator, Dict, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
@@ -15,6 +16,7 @@ from app.agents.agents import (
 )
 from app.core.dependencies import get_current_user, get_db
 from app.models.user import User
+from app.services.llm_service import LLMService
 
 logger = logging.getLogger(__name__)
 
@@ -309,4 +311,187 @@ async def workout_coach(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to process workout coaching: {str(e)}"
+        )
+
+
+# ===== Streaming Endpoints =====
+
+async def generate_stream(iterator: AsyncIterator[str]) -> AsyncIterator[bytes]:
+    """Convert async string iterator to bytes for streaming response.
+
+    Args:
+        iterator: Async iterator yielding string chunks
+
+    Yields:
+        Bytes chunks for streaming response
+    """
+    try:
+        async for chunk in iterator:
+            # Send each chunk as Server-Sent Events (SSE) format
+            yield f"data: {chunk}\n\n".encode("utf-8")
+    except Exception as e:
+        logger.error(f"Error in stream generation: {e}", exc_info=True)
+        yield f"data: [ERROR: {str(e)}]\n\n".encode("utf-8")
+    finally:
+        # Send completion signal
+        yield "data: [DONE]\n\n".encode("utf-8")
+
+
+@router.post("/chat/stream")
+async def stream_chat(
+    request: ChatRequest,
+    current_user: User = Depends(get_current_user),
+):
+    """Stream chatbot responses in real-time.
+
+    Uses Server-Sent Events (SSE) to stream the response as it's generated.
+
+    Args:
+        request: Chat request with message and optional history
+        current_user: Current authenticated user
+
+    Returns:
+        StreamingResponse with SSE format
+    """
+    try:
+        logger.info(f"Streaming chat for user {current_user.id}")
+
+        # Build context from conversation history
+        context = None
+        if request.conversation_history:
+            context = f"Previous conversation: {len(request.conversation_history)} messages"
+
+        # Get streaming iterator
+        stream_iterator = LLMService.stream_chat_response(
+            message=request.message,
+            context=context
+        )
+
+        return StreamingResponse(
+            generate_stream(stream_iterator),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",  # Disable nginx buffering
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Error in stream_chat: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to stream chat: {str(e)}"
+        )
+
+
+@router.post("/nutrition-coach/stream")
+async def stream_nutrition_coaching(
+    request: CoachRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Stream nutrition coaching advice in real-time.
+
+    Args:
+        request: Coach request with question and optional date
+        db: Database session
+        current_user: Current authenticated user
+
+    Returns:
+        StreamingResponse with SSE format
+    """
+    try:
+        logger.info(f"Streaming nutrition coaching for user {current_user.id}")
+
+        # Build user data for context
+        user_data = {
+            "full_name": current_user.full_name,
+            "age": current_user.age,
+            "weight": current_user.weight,
+            "target_weight": current_user.target_weight,
+            "height": current_user.height,
+            "goals": current_user.goals or [],
+        }
+
+        # Build context
+        context = f"Nutrition question: {request.question}"
+
+        # Get streaming iterator
+        stream_iterator = LLMService.stream_coaching_advice(
+            user_data=user_data,
+            context=context
+        )
+
+        return StreamingResponse(
+            generate_stream(stream_iterator),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Error in stream_nutrition_coaching: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to stream nutrition coaching: {str(e)}"
+        )
+
+
+@router.post("/workout-coach/stream")
+async def stream_workout_coaching(
+    request: CoachRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Stream workout coaching advice in real-time.
+
+    Args:
+        request: Coach request with question and optional date
+        db: Database session
+        current_user: Current authenticated user
+
+    Returns:
+        StreamingResponse with SSE format
+    """
+    try:
+        logger.info(f"Streaming workout coaching for user {current_user.id}")
+
+        # Build user data for context
+        user_data = {
+            "full_name": current_user.full_name,
+            "age": current_user.age,
+            "weight": current_user.weight,
+            "target_weight": current_user.target_weight,
+            "height": current_user.height,
+            "goals": current_user.goals or [],
+        }
+
+        # Build context
+        context = f"Workout question: {request.question}"
+
+        # Get streaming iterator
+        stream_iterator = LLMService.stream_coaching_advice(
+            user_data=user_data,
+            context=context
+        )
+
+        return StreamingResponse(
+            generate_stream(stream_iterator),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Error in stream_workout_coaching: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to stream workout coaching: {str(e)}"
         )
