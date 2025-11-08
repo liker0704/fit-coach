@@ -20,6 +20,7 @@ from app.api.v1.training_programs import router as training_programs_router
 from app.api.v1.notifications import router as notifications_router
 from app.api.v1.sleep import router as sleep_router
 from app.api.v1.users import router as users_router
+from app.api.v1.voice import router as voice_router
 from app.api.v1.water import router as water_router
 from app.config import settings
 
@@ -148,6 +149,12 @@ app.include_router(
     training_programs_router,
     prefix=f"{settings.API_V1_PREFIX}/training-programs",
     tags=["training-programs"],
+)
+
+app.include_router(
+    voice_router,
+    prefix=f"{settings.API_V1_PREFIX}/voice",
+    tags=["voice"],
 )
 
 

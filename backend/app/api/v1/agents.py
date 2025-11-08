@@ -17,6 +17,7 @@ from app.agents.agents import (
 from app.core.dependencies import get_current_user, get_db
 from app.models.user import User
 from app.services.llm_service import LLMService
+from app.services.agent_coordinator import AgentCoordinator
 
 logger = logging.getLogger(__name__)
 
@@ -63,6 +64,22 @@ class CoachResponse(BaseModel):
     success: bool
     response: Optional[str] = None
     context_data: Optional[Dict[str, Any]] = None
+    error: Optional[str] = None
+
+
+class CoordinationRequest(BaseModel):
+    """Request schema for multi-agent coordination."""
+    task: str
+    agents: list[str]  # e.g., ["nutrition", "workout"]
+    context: Optional[Dict[str, Any]] = None
+
+
+class CoordinationResponse(BaseModel):
+    """Response schema for multi-agent coordination."""
+    success: bool
+    task: Optional[str] = None
+    agent_results: Optional[Dict[str, Any]] = None
+    synthesis: Optional[str] = None
     error: Optional[str] = None
 
 
@@ -494,4 +511,110 @@ async def stream_workout_coaching(
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Failed to stream workout coaching: {str(e)}"
+        )
+
+
+# ===== Multi-Agent Coordination Endpoints =====
+
+@router.post("/coordinate", response_model=CoordinationResponse)
+async def coordinate_agents(
+    request: CoordinationRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Coordinate multiple agents to complete a complex task.
+
+    Args:
+        request: Coordination request with task and agent list
+        db: Database session
+        current_user: Current authenticated user
+
+    Returns:
+        CoordinationResponse with results from all agents and synthesis
+
+    Example:
+        {
+            "task": "Create comprehensive health plan",
+            "agents": ["nutrition", "workout"],
+            "context": {"date": "2024-01-15"}
+        }
+    """
+    try:
+        logger.info(f"Coordinating agents for user {current_user.id}")
+
+        result = await AgentCoordinator.coordinate_agents(
+            db=db,
+            user=current_user,
+            task=request.task,
+            agents=request.agents,
+            context=request.context
+        )
+
+        return CoordinationResponse(
+            success=result["success"],
+            task=result.get("task"),
+            agent_results=result.get("agent_results"),
+            synthesis=result.get("synthesis"),
+            error=result.get("error")
+        )
+
+    except Exception as e:
+        logger.error(f"Error in agent coordination: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to coordinate agents: {str(e)}"
+        )
+
+
+@router.post("/coordinate/stream")
+async def stream_coordinated_response(
+    request: CoordinationRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    """Stream coordinated response from multiple agents.
+
+    Args:
+        request: Coordination request
+        db: Database session
+        current_user: Current authenticated user
+
+    Returns:
+        StreamingResponse with SSE format
+    """
+    try:
+        logger.info(f"Streaming coordinated response for user {current_user.id}")
+
+        async def generate_stream() -> AsyncIterator[bytes]:
+            """Generate SSE stream."""
+            try:
+                async for chunk in AgentCoordinator.stream_coordinated_response(
+                    db=db,
+                    user=current_user,
+                    task=request.task,
+                    agents=request.agents,
+                    context=request.context
+                ):
+                    yield f"data: {chunk}\n\n".encode("utf-8")
+            except Exception as e:
+                logger.error(f"Error in coordination stream: {e}", exc_info=True)
+                yield f"data: [ERROR: {str(e)}]\n\n".encode("utf-8")
+            finally:
+                yield "data: [DONE]\n\n".encode("utf-8")
+
+        return StreamingResponse(
+            generate_stream(),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",
+            }
+        )
+
+    except Exception as e:
+        logger.error(f"Error starting coordination stream: {e}", exc_info=True)
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Failed to stream coordinated response: {str(e)}"
         )
