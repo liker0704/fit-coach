@@ -22,7 +22,9 @@ class Settings(BaseSettings):
     VERSION: str = "0.1.0"
 
     # Security
-    SECRET_KEY: str = "your-secret-key-here-change-in-production-please-use-a-long-random-string"
+    # IMPORTANT: Must be set via environment variable (.env file)
+    # Generate with: python -c "import secrets; print(secrets.token_urlsafe(32))"
+    SECRET_KEY: str
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
@@ -39,9 +41,10 @@ class Settings(BaseSettings):
     ]
 
     # Database
-    POSTGRES_SERVER: str = "localhost"
-    POSTGRES_USER: str = "fitcoach"
-    POSTGRES_PASSWORD: str = "fitcoachpass"
+    # IMPORTANT: Set via environment variables for security
+    POSTGRES_SERVER: str
+    POSTGRES_USER: str
+    POSTGRES_PASSWORD: str
     POSTGRES_DB: str = "fitcoach"
     POSTGRES_PORT: int = 5432
     DATABASE_URL: Optional[PostgresDsn] = None

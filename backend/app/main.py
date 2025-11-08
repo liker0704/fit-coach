@@ -3,6 +3,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.core.security_middleware import SecurityHeadersMiddleware
 from app.api.v1.agents import router as agents_router
 from app.api.v1.ai import router as ai_router
 from app.api.v1.auth import router as auth_router
@@ -27,13 +28,27 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_PREFIX}/openapi.json",
 )
 
+# Security Headers Middleware (apply first)
+app.add_middleware(SecurityHeadersMiddleware)
+
 # CORS configuration
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+    allow_headers=[
+        "Content-Type",
+        "Authorization",
+        "Accept",
+        "Origin",
+        "User-Agent",
+        "DNT",
+        "Cache-Control",
+        "X-Requested-With",
+    ],
+    expose_headers=["Content-Length", "Content-Type"],
+    max_age=600,  # 10 minutes
 )
 
 # Include routers
@@ -130,14 +145,3 @@ async def root():
 async def health_check():
     """Health check endpoint."""
     return {"status": "healthy"}
-
-
-@app.get("/debug/config")
-async def debug_config():
-    """Debug endpoint - remove in production."""
-    return {
-        "secret_key_length": len(settings.SECRET_KEY),
-        "secret_key_prefix": settings.SECRET_KEY[:10],
-        "algorithm": settings.ALGORITHM,
-        "postgres_user": settings.POSTGRES_USER,
-    }
