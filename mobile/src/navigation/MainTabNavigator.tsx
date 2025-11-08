@@ -1,10 +1,14 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { createStackNavigator } from '@react-navigation/stack';
 import CalendarStackNavigator from './CalendarStackNavigator';
+import AIStackNavigator from './AIStackNavigator';
 import { colors } from '../theme/colors';
-import { View, Text, StyleSheet } from 'react-native';
-import { fontSizes } from '../theme/colors';
+
+// Import screens
+import StatisticsScreen from '../screens/stats/StatisticsScreen';
+import ProfileScreen from '../screens/profile/ProfileScreen';
 
 export type MainTabParamList = {
   CalendarTab: undefined;
@@ -14,27 +18,54 @@ export type MainTabParamList = {
 };
 
 const Tab = createBottomTabNavigator<MainTabParamList>();
+const StatsStack = createStackNavigator();
+const ProfileStack = createStackNavigator();
 
-// Placeholder screens for tabs we haven't built yet
-function PlaceholderScreen({ title }: { title: string }) {
+// Stats Stack Navigator
+function StatsStackNavigator() {
   return (
-    <View style={styles.placeholderContainer}>
-      <MaterialCommunityIcons
-        name="clock-outline"
-        size={64}
-        color={colors.textTertiary}
+    <StatsStack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: colors.primary,
+        },
+        headerTintColor: colors.background,
+        headerTitleStyle: {
+          fontWeight: '600',
+        },
+      }}
+    >
+      <StatsStack.Screen
+        name="Statistics"
+        component={StatisticsScreen}
+        options={{ title: 'Statistics' }}
       />
-      <Text style={styles.placeholderTitle}>{title}</Text>
-      <Text style={styles.placeholderText}>
-        Coming in Phase 3-6
-      </Text>
-    </View>
+    </StatsStack.Navigator>
   );
 }
 
-const StatsScreen = () => <PlaceholderScreen title="Statistics" />;
-const AIScreen = () => <PlaceholderScreen title="AI Agents" />;
-const ProfileScreen = () => <PlaceholderScreen title="Profile" />;
+// Profile Stack Navigator
+function ProfileStackNavigator() {
+  return (
+    <ProfileStack.Navigator
+      screenOptions={{
+        headerStyle: {
+          backgroundColor: colors.primary,
+        },
+        headerTintColor: colors.background,
+        headerTitleStyle: {
+          fontWeight: '600',
+        },
+      }}
+    >
+      <ProfileStack.Screen
+        name="Profile"
+        component={ProfileScreen}
+        options={{ title: 'Profile & Settings' }}
+      />
+    </ProfileStack.Navigator>
+  );
+}
 
 export default function MainTabNavigator() {
   return (
@@ -63,59 +94,38 @@ export default function MainTabNavigator() {
       />
       <Tab.Screen
         name="StatsTab"
-        component={StatsScreen}
+        component={StatsStackNavigator}
         options={{
           title: 'Stats',
           tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="chart-line" size={size} color={color} />
+            <MaterialCommunityIcons
+              name="chart-line"
+              size={size}
+              color={color}
+            />
           ),
-          headerShown: true,
         }}
       />
       <Tab.Screen
         name="AITab"
-        component={AIScreen}
+        component={AIStackNavigator}
         options={{
           title: 'AI Coach',
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="robot" size={size} color={color} />
           ),
-          headerShown: true,
         }}
       />
       <Tab.Screen
         name="ProfileTab"
-        component={ProfileScreen}
+        component={ProfileStackNavigator}
         options={{
           title: 'Profile',
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="account" size={size} color={color} />
           ),
-          headerShown: true,
         }}
       />
     </Tab.Navigator>
   );
 }
-
-const styles = StyleSheet.create({
-  placeholderContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    backgroundColor: colors.background,
-    padding: 24,
-  },
-  placeholderTitle: {
-    fontSize: fontSizes.xxl,
-    fontWeight: '700',
-    color: colors.text,
-    marginTop: 16,
-  },
-  placeholderText: {
-    fontSize: fontSizes.md,
-    color: colors.textSecondary,
-    marginTop: 8,
-    textAlign: 'center',
-  },
-});

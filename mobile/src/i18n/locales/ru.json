@@ -1,0 +1,91 @@
+{
+  "auth": {
+    "login": "Вход",
+    "register": "Регистрация",
+    "email": "Электронная почта",
+    "password": "Пароль",
+    "fullName": "Полное имя",
+    "confirmPassword": "Подтвердите пароль",
+    "forgotPassword": "Забыли пароль?",
+    "dontHaveAccount": "Нет аккаунта?",
+    "alreadyHaveAccount": "Уже есть аккаунт?",
+    "loginButton": "Войти",
+    "registerButton": "Зарегистрироваться"
+  },
+  "calendar": {
+    "title": "Календарь",
+    "hello": "Привет",
+    "trackYourJourney": "Отслеживайте свой путь к здоровью",
+    "thisMonth": "В этом месяце",
+    "daysLogged": "Дней записано",
+    "effortTracked": "Усилий отслежено"
+  },
+  "day": {
+    "overview": "Обзор",
+    "meals": "Питание",
+    "exercise": "Упражнения",
+    "water": "Вода",
+    "sleep": "Сон",
+    "mood": "Настроение",
+    "notes": "Заметки"
+  },
+  "stats": {
+    "title": "Статистика",
+    "subtitle": "Отслеживайте свой прогресс",
+    "week": "Неделя",
+    "month": "Месяц",
+    "weightTrend": "Тренд веса",
+    "caloriesConsumed": "Потреблено калорий",
+    "waterIntake": "Потребление воды",
+    "sleepDuration": "Длительность сна",
+    "exerciseDuration": "Длительность упражнений",
+    "noData": "Нет данных за выбранный период. Начните отслеживать свое здоровье, чтобы увидеть статистику!"
+  },
+  "ai": {
+    "chatbot": "ИИ Чатбот",
+    "vision": "Агент зрения",
+    "coaches": "ИИ Тренеры",
+    "nutritionCoach": "Тренер по питанию",
+    "workoutCoach": "Тренер по тренировкам",
+    "askQuestion": "Задать вопрос",
+    "getAdvice": "Получить общий совет",
+    "analyzing": "Анализирую ваши данные...",
+    "thinking": "Думаю..."
+  },
+  "profile": {
+    "title": "Профиль и настройки",
+    "profileInfo": "Информация профиля",
+    "settings": "Настройки",
+    "about": "О приложении",
+    "fullName": "Полное имя",
+    "email": "Электронная почта",
+    "age": "Возраст",
+    "height": "Рост (см)",
+    "weight": "Вес (кг)",
+    "saveChanges": "Сохранить изменения",
+    "language": "Язык",
+    "notifications": "Уведомления",
+    "notificationsDescription": "Ежедневные напоминания и советы",
+    "darkMode": "Темная тема",
+    "darkModeDescription": "Переключить на темную тему",
+    "version": "Версия",
+    "privacyPolicy": "Политика конфиденциальности",
+    "termsOfService": "Условия использования",
+    "logout": "Выйти",
+    "logoutConfirm": "Вы уверены, что хотите выйти?"
+  },
+  "common": {
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "delete": "Удалить",
+    "edit": "Редактировать",
+    "add": "Добавить",
+    "loading": "Загрузка...",
+    "error": "Ошибка",
+    "success": "Успех",
+    "confirm": "Подтвердить",
+    "close": "Закрыть",
+    "yes": "Да",
+    "no": "Нет"
+  }
+}
