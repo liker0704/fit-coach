@@ -4,7 +4,7 @@
 
 [![Backend Tests](https://img.shields.io/badge/Backend-18%2F18%20tests%20passing-success.svg)](./backend/TEST_REPORT.md)
 [![Backend Status](https://img.shields.io/badge/Backend-MVP%20Complete-success.svg)](#backend)
-[![Desktop Status](https://img.shields.io/badge/Desktop-In%20Development-yellow.svg)](#desktop)
+[![Desktop Status](https://img.shields.io/badge/Desktop-95%25%20Complete-green.svg)](#desktop)
 [![iOS Status](https://img.shields.io/badge/iOS-Planned-lightgrey.svg)](#ios)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
@@ -46,6 +46,7 @@ FitCoach is a comprehensive cross-platform health tracking system with native cl
 
 ### Core Functionality
 - **Daily Tracking Card** - Date, tags, wellness score, effort rating
+- **Weight Tracking** - Daily weight logging with trend visualization
 - **Nutrition Logging** - Meals with macronutrients, calories, categories
 - **Exercise Tracking** - Workouts with duration, intensity, heart rate
 - **Water Intake** - Visual hydration monitoring (goal: 2.5-3L)
@@ -194,6 +195,11 @@ fit-coach/
 - **[VISION_AGENT_MVP_COMPLETE.md](./VISION_AGENT_MVP_COMPLETE.md)** - Vision Agent (meal photo recognition)
 - **[VISION_AGENT_SETUP.md](./VISION_AGENT_SETUP.md)** - Gemini Vision API setup guide
 
+### Desktop Features
+- **[docs/WEIGHT_TRACKING.md](./docs/WEIGHT_TRACKING.md)** - Daily weight tracking implementation
+- **[docs/I18N_MULTILANGUAGE.md](./docs/I18N_MULTILANGUAGE.md)** - Multi-language support (EN/RU/CZ)
+- **[docs/DESKTOP_NOTIFICATIONS.md](./docs/DESKTOP_NOTIFICATIONS.md)** - Native desktop notifications
+
 ### Components
 - **[backend/README.md](./backend/README.md)** - Backend API documentation
 - **[desktop/README.md](./desktop/README.md)** - Desktop client documentation
@@ -236,11 +242,18 @@ npm test  # Run tests (when implemented)
   - [x] Workout Coach - Personalized training guidance
 - [x] Frontend UI for all AI agents (ChatbotDialog, CoachDialog, AISummarySection)
 - [x] Complete API documentation and integration tests
+- [x] **Desktop UI (95% complete):**
+  - [x] Authentication pages (Login, Register)
+  - [x] Calendar view with monthly grid
+  - [x] Day view with 7 tabs (Overview, Meals, Exercise, Water, Sleep, Mood, Notes)
+  - [x] Statistics page with charts
+  - [x] Profile & Settings page
+  - [x] Daily weight tracking with trend visualization
+  - [x] Multi-language support (EN/RU/CZ) with i18next
+  - [x] Desktop notifications with configurable daily reminders
 
 ### 🔨 In Progress
-- [ ] Desktop UI polishing (auth, calendar, day view, statistics)
-- [ ] Calendar view with monthly grid
-- [ ] Enhanced statistics and charts
+- [ ] Mobile apps (iOS + Android)
 
 ### 📅 Planned (Phase 2)
 - [ ] Response streaming for AI agents
@@ -249,10 +262,9 @@ npm test  # Run tests (when implemented)
 - [ ] 7-day meal plan generation
 - [ ] Training program generation (12-week programs)
 - [ ] Wearables integration (Garmin, Fitbit)
-- [ ] iOS native client
 - [ ] Data export/import (JSON)
-- [ ] Multi-language support (EN/RU/CZ)
 - [ ] Dark mode theme
+- [ ] Push notifications for mobile apps
 
 ## 🤝 Contributing
 
