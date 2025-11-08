@@ -1,8 +1,10 @@
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import CalendarScreen from '../screens/calendar/CalendarScreen';
+import CalendarStackNavigator from './CalendarStackNavigator';
 import { colors } from '../theme/colors';
+import { View, Text, StyleSheet } from 'react-native';
+import { fontSizes } from '../theme/colors';
 
 export type MainTabParamList = {
   CalendarTab: undefined;
@@ -16,12 +18,17 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 // Placeholder screens for tabs we haven't built yet
 function PlaceholderScreen({ title }: { title: string }) {
   return (
-    <div style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <p style={{ fontSize: 24, fontWeight: '700' }}>{title}</p>
-      <p style={{ color: colors.textSecondary, marginTop: 8 }}>
-        This screen will be implemented in Phase 2-4
-      </p>
-    </div>
+    <View style={styles.placeholderContainer}>
+      <MaterialCommunityIcons
+        name="clock-outline"
+        size={64}
+        color={colors.textTertiary}
+      />
+      <Text style={styles.placeholderTitle}>{title}</Text>
+      <Text style={styles.placeholderText}>
+        Coming in Phase 3-6
+      </Text>
+    </View>
   );
 }
 
@@ -35,13 +42,18 @@ export default function MainTabNavigator() {
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textSecondary,
-        headerShown: true,
+        headerShown: false,
+        tabBarStyle: {
+          paddingBottom: 4,
+          paddingTop: 4,
+          height: 60,
+        },
       }}
       initialRouteName="CalendarTab"
     >
       <Tab.Screen
         name="CalendarTab"
-        component={CalendarScreen}
+        component={CalendarStackNavigator}
         options={{
           title: 'Calendar',
           tabBarIcon: ({ color, size }) => (
@@ -57,6 +69,7 @@ export default function MainTabNavigator() {
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="chart-line" size={size} color={color} />
           ),
+          headerShown: true,
         }}
       />
       <Tab.Screen
@@ -67,6 +80,7 @@ export default function MainTabNavigator() {
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="robot" size={size} color={color} />
           ),
+          headerShown: true,
         }}
       />
       <Tab.Screen
@@ -77,8 +91,31 @@ export default function MainTabNavigator() {
           tabBarIcon: ({ color, size }) => (
             <MaterialCommunityIcons name="account" size={size} color={color} />
           ),
+          headerShown: true,
         }}
       />
     </Tab.Navigator>
   );
 }
+
+const styles = StyleSheet.create({
+  placeholderContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    padding: 24,
+  },
+  placeholderTitle: {
+    fontSize: fontSizes.xxl,
+    fontWeight: '700',
+    color: colors.text,
+    marginTop: 16,
+  },
+  placeholderText: {
+    fontSize: fontSizes.md,
+    color: colors.textSecondary,
+    marginTop: 8,
+    textAlign: 'center',
+  },
+});
