@@ -44,31 +44,66 @@ export default function ChatbotScreen() {
     };
 
     setMessages((prev) => [...prev, userMessage]);
+    const userInput = inputText;
     setInputText('');
     setIsLoading(true);
 
-    try {
-      const response = await agentService.sendChatMessage(inputText);
-
-      const assistantMessage: ChatMessage = {
+    // Create placeholder message for streaming response
+    const assistantMessageIndex = messages.length + 1;
+    setMessages((prev) => [
+      ...prev,
+      {
         role: 'assistant',
-        content: response,
+        content: '',
         timestamp: new Date(),
-      };
+      },
+    ]);
 
-      setMessages((prev) => [...prev, assistantMessage]);
+    let accumulatedContent = '';
+
+    try {
+      await agentService.streamChatMessage(
+        userInput,
+        // onChunk: accumulate and update message
+        (chunk: string) => {
+          accumulatedContent += chunk;
+          setMessages((prev) => {
+            const newMessages = [...prev];
+            if (newMessages[assistantMessageIndex]) {
+              newMessages[assistantMessageIndex].content = accumulatedContent;
+            }
+            return newMessages;
+          });
+        },
+        // onComplete
+        () => {
+          setIsLoading(false);
+        },
+        // onError
+        (error: Error) => {
+          console.error('Stream error:', error);
+          setMessages((prev) => {
+            const newMessages = [...prev];
+            if (newMessages[assistantMessageIndex]) {
+              newMessages[assistantMessageIndex].content =
+                accumulatedContent ||
+                'Sorry, I encountered an error. Please try again.';
+            }
+            return newMessages;
+          });
+          setIsLoading(false);
+        }
+      );
     } catch (error) {
       console.error('Chat error:', error);
-
-      const errorMessage: ChatMessage = {
-        role: 'assistant',
-        content:
-          'Sorry, I encountered an error. Please try again or check your connection.',
-        timestamp: new Date(),
-      };
-
-      setMessages((prev) => [...prev, errorMessage]);
-    } finally {
+      setMessages((prev) => {
+        const newMessages = [...prev];
+        if (newMessages[assistantMessageIndex]) {
+          newMessages[assistantMessageIndex].content =
+            'Sorry, I encountered an error. Please try again or check your connection.';
+        }
+        return newMessages;
+      });
       setIsLoading(false);
     }
   };
