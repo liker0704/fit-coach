@@ -4,15 +4,16 @@
 
 [![Backend Tests](https://img.shields.io/badge/Backend-18%2F18%20tests%20passing-success.svg)](./backend/TEST_REPORT.md)
 [![Backend Status](https://img.shields.io/badge/Backend-MVP%20Complete-success.svg)](#backend)
-[![Desktop Status](https://img.shields.io/badge/Desktop-In%20Development-yellow.svg)](#desktop)
-[![iOS Status](https://img.shields.io/badge/iOS-Planned-lightgrey.svg)](#ios)
+[![Desktop Status](https://img.shields.io/badge/Desktop-95%25%20Complete-green.svg)](#desktop)
+[![Mobile Status](https://img.shields.io/badge/Mobile-Production%20Ready-success.svg)](#mobile)
+[![Security](https://img.shields.io/badge/Security-Hardened-success.svg)](./SECURITY.md)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
 
 ## 📋 Overview
 
-FitCoach is a comprehensive cross-platform health tracking system with native clients for Desktop (Linux/Windows/macOS) and iOS. All data is stored on a secure server with FastAPI backend and PostgreSQL database. The application enables tracking of daily habits, health metrics, and provides AI-powered coaching insights using LangChain + OpenAI.
+FitCoach is a comprehensive cross-platform health tracking system with native clients for Desktop (Linux/Windows/macOS) and Mobile (iOS/Android). All data is stored on a secure server with FastAPI backend and PostgreSQL database. The application enables tracking of daily habits, health metrics, and provides AI-powered coaching insights using LangChain + LLM.
 
-**Project Status**: Backend MVP complete with full AI Agents system, Desktop in active development, iOS in planning phase.
+**Project Status**: ✅ Backend MVP complete | ✅ Mobile app production ready | 🔨 Desktop 95% complete
 
 ## 🏗️ Architecture
 
@@ -23,22 +24,24 @@ FitCoach is a comprehensive cross-platform health tracking system with native cl
 │  - REST API → FastAPI            │
 │  - AI Agents UI (Chat, Coaches)  │
 └────────────┬─────────────────────┘
+             │
+┌────────────┼─────────────────────┐
+│  Mobile App (React Native) ✅    │
+│  - iOS 15+ / Android 8+          │
+│  - SecureStore (tokens)          │
+│  - Offline support               │
+│  - Multi-language (EN/RU/CZ)     │
+└────────────┬─────────────────────┘
              │ HTTPS / JWT
 ┌────────────▼─────────────────────┐
 │      FastAPI Backend (Python)    │
 │  - JWT Authentication            │
-│  - SQLAlchemy ORM                │
+│  - Security Headers ✅           │
 │  - AI Agents (LangChain + LLM) ✅│
 └────────────┬─────────────────────┘
              │
 ┌────────────▼─────────────────────┐
 │      PostgreSQL Database         │
-└────────────┬─────────────────────┘
-             │
-┌────────────▼─────────────────────┐
-│   iOS App (Swift / SwiftUI)      │
-│   - CoreData / SQLite cache      │
-│   - REST API → FastAPI           │
 └──────────────────────────────────┘
 ```
 
@@ -46,6 +49,7 @@ FitCoach is a comprehensive cross-platform health tracking system with native cl
 
 ### Core Functionality
 - **Daily Tracking Card** - Date, tags, wellness score, effort rating
+- **Weight Tracking** - Daily weight logging with trend visualization
 - **Nutrition Logging** - Meals with macronutrients, calories, categories
 - **Exercise Tracking** - Workouts with duration, intensity, heart rate
 - **Water Intake** - Visual hydration monitoring (goal: 2.5-3L)
@@ -64,12 +68,15 @@ FitCoach is a comprehensive cross-platform health tracking system with native cl
 - Weekly/monthly aggregations
 - Trend analysis and progress visualization
 
-### Security & Privacy
+### Security & Privacy ✅
 - JWT-based authentication (access + refresh tokens)
-- Password hashing with bcrypt
+- Password hashing with bcrypt (12 rounds)
 - User data isolation
-- CORS protection
-- Secure token storage
+- Comprehensive security headers (XSS, CSP, HSTS)
+- Restricted CORS configuration
+- Secure token storage (SecureStore on mobile)
+- No hardcoded secrets (all via .env)
+- See [SECURITY.md](./SECURITY.md) for full details
 
 ## 🚀 Quick Start
 
@@ -131,8 +138,14 @@ fit-coach/
 │   ├── electron/        # Electron main process
 │   └── README.md        # Desktop documentation
 │
-├── ios/                 # iOS Swift client (planned)
-│   └── README.md        # iOS development plan
+├── mobile/              # React Native app (iOS + Android) ✅
+│   ├── src/
+│   │   ├── screens/     # App screens
+│   │   ├── navigation/  # Navigation setup
+│   │   ├── services/    # API client
+│   │   ├── store/       # Zustand state
+│   │   └── i18n/        # Multi-language
+│   └── README.md        # Mobile documentation
 │
 └── docs/                # Project documentation
     ├── README.md                    # Documentation index
@@ -169,13 +182,17 @@ fit-coach/
 | Charts | **Recharts** | Data visualization |
 | HTTP Client | **Axios** | API communication |
 
-### iOS (Planned)
+### Mobile (iOS + Android) ✅
 | Component | Technology | Purpose |
 |-----------|------------|---------|
-| Framework | **Swift + SwiftUI** | Native iOS UI |
-| Networking | **URLSession / Alamofire** | REST API client |
-| Storage | **CoreData / GRDB** | Local cache |
-| Charts | **Swift Charts** | Data visualization |
+| Framework | **React Native 0.73 + Expo** | Cross-platform mobile |
+| Language | **TypeScript 5.8** | Type-safe development |
+| Navigation | **React Navigation 6** | Native navigation |
+| UI Components | **React Native Paper** | Material Design |
+| State | **Zustand 5.0** | State management |
+| Storage | **Expo SecureStore** | Secure token storage |
+| Charts | **react-native-chart-kit** | Data visualization |
+| i18n | **i18next** | Multi-language (EN/RU/CZ) |
 
 ## 📖 Documentation
 
@@ -193,6 +210,18 @@ fit-coach/
 - **[backend/AGENTS_API_DOCUMENTATION.md](./backend/AGENTS_API_DOCUMENTATION.md)** - Full API reference for all agents
 - **[VISION_AGENT_MVP_COMPLETE.md](./VISION_AGENT_MVP_COMPLETE.md)** - Vision Agent (meal photo recognition)
 - **[VISION_AGENT_SETUP.md](./VISION_AGENT_SETUP.md)** - Gemini Vision API setup guide
+
+### Desktop Features
+- **[docs/WEIGHT_TRACKING.md](./docs/WEIGHT_TRACKING.md)** - Daily weight tracking implementation
+- **[docs/I18N_MULTILANGUAGE.md](./docs/I18N_MULTILANGUAGE.md)** - Multi-language support (EN/RU/CZ)
+- **[docs/DESKTOP_NOTIFICATIONS.md](./docs/DESKTOP_NOTIFICATIONS.md)** - Native desktop notifications
+
+### Mobile App ✅
+- **[mobile/README.md](./mobile/README.md)** - Complete mobile app documentation
+- **[docs/MOBILE_APPS_PLAN.md](./docs/MOBILE_APPS_PLAN.md)** - Development plan and architecture
+
+### Security 🔒
+- **[SECURITY.md](./SECURITY.md)** - Security policy and best practices
 
 ### Components
 - **[backend/README.md](./backend/README.md)** - Backend API documentation
@@ -236,11 +265,33 @@ npm test  # Run tests (when implemented)
   - [x] Workout Coach - Personalized training guidance
 - [x] Frontend UI for all AI agents (ChatbotDialog, CoachDialog, AISummarySection)
 - [x] Complete API documentation and integration tests
+- [x] **Desktop UI (95% complete):**
+  - [x] Authentication pages (Login, Register)
+  - [x] Calendar view with monthly grid
+  - [x] Day view with 7 tabs (Overview, Meals, Exercise, Water, Sleep, Mood, Notes)
+  - [x] Statistics page with charts
+  - [x] Profile & Settings page
+  - [x] Daily weight tracking with trend visualization
+  - [x] Multi-language support (EN/RU/CZ) with i18next
+  - [x] Desktop notifications with configurable daily reminders
+- [x] **Mobile App (React Native - Production Ready) ✅:**
+  - [x] iOS 15+ and Android 8+ support
+  - [x] Authentication (Login/Register) with JWT
+  - [x] Calendar view with day markers
+  - [x] Day screen with 7 tabs (full tracking)
+  - [x] Statistics screen with charts (Week/Month)
+  - [x] AI Agents (Chatbot, Vision, Coaches)
+  - [x] Profile & Settings
+  - [x] Multi-language (EN/RU/CZ)
+  - [x] Secure token storage (SecureStore)
+- [x] **Security Hardening ✅:**
+  - [x] Removed hardcoded secrets
+  - [x] Added comprehensive security headers
+  - [x] Restricted CORS configuration
+  - [x] Created security documentation (SECURITY.md)
 
 ### 🔨 In Progress
-- [ ] Desktop UI polishing (auth, calendar, day view, statistics)
-- [ ] Calendar view with monthly grid
-- [ ] Enhanced statistics and charts
+- [ ] Desktop UI polish (5% remaining)
 
 ### 📅 Planned (Phase 2)
 - [ ] Response streaming for AI agents
@@ -249,10 +300,9 @@ npm test  # Run tests (when implemented)
 - [ ] 7-day meal plan generation
 - [ ] Training program generation (12-week programs)
 - [ ] Wearables integration (Garmin, Fitbit)
-- [ ] iOS native client
 - [ ] Data export/import (JSON)
-- [ ] Multi-language support (EN/RU/CZ)
 - [ ] Dark mode theme
+- [ ] Push notifications for mobile apps
 
 ## 🤝 Contributing
 

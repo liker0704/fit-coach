@@ -266,7 +266,7 @@ class AuthService:
     @staticmethod
     def reset_password_with_token(
         db: Session, token: str, new_password: str
-    ) -> bool:
+    ) -> Optional[User]:
         """Reset user password using a reset token.
 
         Args:
@@ -275,11 +275,11 @@ class AuthService:
             new_password: New password to set
 
         Returns:
-            True if password was reset successfully, False if token is invalid/expired
+            User object if password was reset successfully, None if token is invalid/expired
         """
         # Check if token exists
         if token not in _reset_tokens:
-            return False
+            return None
 
         token_data = _reset_tokens[token]
 
@@ -287,14 +287,14 @@ class AuthService:
         if token_data["expires_at"] < datetime.now(timezone.utc):
             # Remove expired token
             del _reset_tokens[token]
-            return False
+            return None
 
         # Get user
         user = db.query(User).filter(User.id == token_data["user_id"]).first()
         if not user:
             # Remove token if user doesn't exist
             del _reset_tokens[token]
-            return False
+            return None
 
         # Update password
         user.hashed_password = get_password_hash(new_password)
@@ -303,7 +303,7 @@ class AuthService:
         # Delete token (single use)
         del _reset_tokens[token]
 
-        return True
+        return user
 
     @staticmethod
     def create_email_verification_token(db: Session, user_id: int) -> str:

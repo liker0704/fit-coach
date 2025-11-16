@@ -1,0 +1,348 @@
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  View,
+  StyleSheet,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  Alert,
+} from 'react-native';
+import {
+  Text,
+  TextInput,
+  IconButton,
+  Card,
+  ActivityIndicator,
+} from 'react-native-paper';
+import { colors, spacing, fontSizes } from '../../theme/colors';
+import { agentService, ChatMessage } from '../../services/api/agentService';
+import { VoiceService } from '../../services/voiceService';
+
+export default function ChatbotScreen() {
+  const [messages, setMessages] = useState<ChatMessage[]>([
+    {
+      role: 'assistant',
+      content:
+        'Hello! I\'m your FitCoach AI assistant. How can I help you today?',
+      timestamp: new Date(),
+    },
+  ]);
+  const [inputText, setInputText] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isRecording, setIsRecording] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const scrollViewRef = useRef<ScrollView>(null);
+
+  // Auto-scroll to bottom when new message added
+  useEffect(() => {
+    scrollViewRef.current?.scrollToEnd({ animated: true });
+  }, [messages]);
+
+  const handleVoiceInput = async () => {
+    if (isRecording) {
+      // Stop recording and transcribe
+      try {
+        setIsRecording(false);
+        setIsTranscribing(true);
+
+        const audioUri = await VoiceService.stopRecording();
+        if (!audioUri) {
+          Alert.alert('Error', 'Failed to record audio');
+          setIsTranscribing(false);
+          return;
+        }
+
+        // Transcribe audio to text
+        const result = await VoiceService.speechToText(audioUri);
+        if (result.success && result.text) {
+          setInputText(result.text);
+        } else {
+          Alert.alert('Error', 'Failed to transcribe audio');
+        }
+
+        setIsTranscribing(false);
+      } catch (error) {
+        console.error('Voice input error:', error);
+        Alert.alert('Error', 'Failed to process voice input');
+        setIsTranscribing(false);
+      }
+    } else {
+      // Start recording
+      try {
+        await VoiceService.startRecording();
+        setIsRecording(true);
+      } catch (error) {
+        console.error('Recording error:', error);
+        Alert.alert(
+          'Error',
+          'Failed to start recording. Please check microphone permissions.'
+        );
+      }
+    }
+  };
+
+  const handleSend = async () => {
+    if (!inputText.trim() || isLoading) return;
+
+    const userMessage: ChatMessage = {
+      role: 'user',
+      content: inputText,
+      timestamp: new Date(),
+    };
+
+    setMessages((prev) => [...prev, userMessage]);
+    const userInput = inputText;
+    setInputText('');
+    setIsLoading(true);
+
+    // Create placeholder message for streaming response
+    const assistantMessageIndex = messages.length + 1;
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: 'assistant',
+        content: '',
+        timestamp: new Date(),
+      },
+    ]);
+
+    let accumulatedContent = '';
+
+    try {
+      await agentService.streamChatMessage(
+        userInput,
+        // onChunk: accumulate and update message
+        (chunk: string) => {
+          accumulatedContent += chunk;
+          setMessages((prev) => {
+            const newMessages = [...prev];
+            if (newMessages[assistantMessageIndex]) {
+              newMessages[assistantMessageIndex].content = accumulatedContent;
+            }
+            return newMessages;
+          });
+        },
+        // onComplete
+        () => {
+          setIsLoading(false);
+        },
+        // onError
+        (error: Error) => {
+          console.error('Stream error:', error);
+          setMessages((prev) => {
+            const newMessages = [...prev];
+            if (newMessages[assistantMessageIndex]) {
+              newMessages[assistantMessageIndex].content =
+                accumulatedContent ||
+                'Sorry, I encountered an error. Please try again.';
+            }
+            return newMessages;
+          });
+          setIsLoading(false);
+        }
+      );
+    } catch (error) {
+      console.error('Chat error:', error);
+      setMessages((prev) => {
+        const newMessages = [...prev];
+        if (newMessages[assistantMessageIndex]) {
+          newMessages[assistantMessageIndex].content =
+            'Sorry, I encountered an error. Please try again or check your connection.';
+        }
+        return newMessages;
+      });
+      setIsLoading(false);
+    }
+  };
+
+  return (
+    <KeyboardAvoidingView
+      style={styles.container}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+      keyboardVerticalOffset={100}
+    >
+      {/* Messages */}
+      <ScrollView
+        ref={scrollViewRef}
+        style={styles.messagesContainer}
+        contentContainerStyle={styles.messagesContent}
+      >
+        {messages.map((message, index) => (
+          <View
+            key={index}
+            style={[
+              styles.messageWrapper,
+              message.role === 'user'
+                ? styles.userMessageWrapper
+                : styles.assistantMessageWrapper,
+            ]}
+          >
+            <Card
+              style={[
+                styles.messageCard,
+                message.role === 'user'
+                  ? styles.userMessage
+                  : styles.assistantMessage,
+              ]}
+            >
+              <Card.Content>
+                <Text
+                  style={[
+                    styles.messageText,
+                    message.role === 'user' && styles.userMessageText,
+                  ]}
+                >
+                  {message.content}
+                </Text>
+                <Text
+                  style={[
+                    styles.timestamp,
+                    message.role === 'user' && styles.userTimestamp,
+                  ]}
+                >
+                  {message.timestamp.toLocaleTimeString([], {
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  })}
+                </Text>
+              </Card.Content>
+            </Card>
+          </View>
+        ))}
+
+        {isLoading && (
+          <View style={styles.loadingWrapper}>
+            <Card style={styles.loadingCard}>
+              <Card.Content style={styles.loadingContent}>
+                <ActivityIndicator size="small" color={colors.primary} />
+                <Text style={styles.loadingText}>Thinking...</Text>
+              </Card.Content>
+            </Card>
+          </View>
+        )}
+      </ScrollView>
+
+      {/* Input */}
+      <View style={styles.inputContainer}>
+        <TextInput
+          value={inputText}
+          onChangeText={setInputText}
+          placeholder={
+            isRecording
+              ? 'Recording...'
+              : isTranscribing
+              ? 'Transcribing...'
+              : 'Type your message...'
+          }
+          mode="outlined"
+          style={styles.input}
+          multiline
+          maxLength={500}
+          onSubmitEditing={handleSend}
+          disabled={isLoading || isRecording || isTranscribing}
+        />
+        <IconButton
+          icon={isRecording ? 'stop' : 'microphone'}
+          size={24}
+          iconColor={isRecording ? colors.error : colors.primary}
+          onPress={handleVoiceInput}
+          disabled={isLoading || isTranscribing}
+          style={styles.voiceButton}
+        />
+        <IconButton
+          icon="send"
+          size={24}
+          iconColor={colors.primary}
+          onPress={handleSend}
+          disabled={!inputText.trim() || isLoading || isRecording || isTranscribing}
+          style={styles.sendButton}
+        />
+      </View>
+    </KeyboardAvoidingView>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  messagesContainer: {
+    flex: 1,
+  },
+  messagesContent: {
+    padding: spacing.md,
+    paddingBottom: spacing.xl,
+  },
+  messageWrapper: {
+    marginBottom: spacing.md,
+    maxWidth: '80%',
+  },
+  userMessageWrapper: {
+    alignSelf: 'flex-end',
+  },
+  assistantMessageWrapper: {
+    alignSelf: 'flex-start',
+  },
+  messageCard: {
+    elevation: 1,
+  },
+  userMessage: {
+    backgroundColor: colors.primary,
+  },
+  assistantMessage: {
+    backgroundColor: colors.backgroundSecondary,
+  },
+  messageText: {
+    fontSize: fontSizes.md,
+    color: colors.text,
+    lineHeight: 22,
+  },
+  userMessageText: {
+    color: colors.background,
+  },
+  timestamp: {
+    fontSize: fontSizes.xs,
+    color: colors.textTertiary,
+    marginTop: spacing.xs,
+  },
+  userTimestamp: {
+    color: 'rgba(255, 255, 255, 0.7)',
+  },
+  loadingWrapper: {
+    alignSelf: 'flex-start',
+    maxWidth: '80%',
+  },
+  loadingCard: {
+    backgroundColor: colors.backgroundSecondary,
+    elevation: 1,
+  },
+  loadingContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  loadingText: {
+    marginLeft: spacing.sm,
+    fontSize: fontSizes.md,
+    color: colors.textSecondary,
+  },
+  inputContainer: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    padding: spacing.md,
+    backgroundColor: colors.background,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  input: {
+    flex: 1,
+    marginRight: spacing.sm,
+    maxHeight: 100,
+  },
+  voiceButton: {
+    margin: 0,
+  },
+  sendButton: {
+    margin: 0,
+  },
+});

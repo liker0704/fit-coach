@@ -1,0 +1,91 @@
+{
+  "auth": {
+    "login": "Přihlásit se",
+    "register": "Registrovat",
+    "email": "E-mail",
+    "password": "Heslo",
+    "fullName": "Celé jméno",
+    "confirmPassword": "Potvrdit heslo",
+    "forgotPassword": "Zapomenuté heslo?",
+    "dontHaveAccount": "Nemáte účet?",
+    "alreadyHaveAccount": "Již máte účet?",
+    "loginButton": "Přihlásit",
+    "registerButton": "Zaregistrovat"
+  },
+  "calendar": {
+    "title": "Kalendář",
+    "hello": "Ahoj",
+    "trackYourJourney": "Sledujte svou cestu ke zdraví",
+    "thisMonth": "Tento měsíc",
+    "daysLogged": "Dní zaznamenáno",
+    "effortTracked": "Úsilí sledováno"
+  },
+  "day": {
+    "overview": "Přehled",
+    "meals": "Jídla",
+    "exercise": "Cvičení",
+    "water": "Voda",
+    "sleep": "Spánek",
+    "mood": "Nálada",
+    "notes": "Poznámky"
+  },
+  "stats": {
+    "title": "Statistiky",
+    "subtitle": "Sledujte svůj pokrok",
+    "week": "Týden",
+    "month": "Měsíc",
+    "weightTrend": "Trend váhy",
+    "caloriesConsumed": "Spotřebované kalorie",
+    "waterIntake": "Příjem vody",
+    "sleepDuration": "Délka spánku",
+    "exerciseDuration": "Délka cvičení",
+    "noData": "Pro vybrané období nejsou k dispozici žádné údaje. Začněte sledovat své zdraví, abyste zde viděli statistiky!"
+  },
+  "ai": {
+    "chatbot": "AI Chatbot",
+    "vision": "Vizuální agent",
+    "coaches": "AI Trenéři",
+    "nutritionCoach": "Trenér výživy",
+    "workoutCoach": "Trenér cvičení",
+    "askQuestion": "Položit otázku",
+    "getAdvice": "Získat obecnou radu",
+    "analyzing": "Analyzuji vaše data...",
+    "thinking": "Přemýšlím..."
+  },
+  "profile": {
+    "title": "Profil a nastavení",
+    "profileInfo": "Informace o profilu",
+    "settings": "Nastavení",
+    "about": "O aplikaci",
+    "fullName": "Celé jméno",
+    "email": "E-mail",
+    "age": "Věk",
+    "height": "Výška (cm)",
+    "weight": "Váha (kg)",
+    "saveChanges": "Uložit změny",
+    "language": "Jazyk",
+    "notifications": "Oznámení",
+    "notificationsDescription": "Denní připomínky a postřehy",
+    "darkMode": "Tmavý režim",
+    "darkModeDescription": "Přepnout na tmavý režim",
+    "version": "Verze",
+    "privacyPolicy": "Zásady ochrany osobních údajů",
+    "termsOfService": "Podmínky služby",
+    "logout": "Odhlásit se",
+    "logoutConfirm": "Opravdu se chcete odhlásit?"
+  },
+  "common": {
+    "save": "Uložit",
+    "cancel": "Zrušit",
+    "delete": "Smazat",
+    "edit": "Upravit",
+    "add": "Přidat",
+    "loading": "Načítání...",
+    "error": "Chyba",
+    "success": "Úspěch",
+    "confirm": "Potvrdit",
+    "close": "Zavřít",
+    "yes": "Ano",
+    "no": "Ne"
+  }
+}

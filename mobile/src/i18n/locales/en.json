@@ -1,0 +1,91 @@
+{
+  "auth": {
+    "login": "Login",
+    "register": "Register",
+    "email": "Email",
+    "password": "Password",
+    "fullName": "Full Name",
+    "confirmPassword": "Confirm Password",
+    "forgotPassword": "Forgot Password?",
+    "dontHaveAccount": "Don't have an account?",
+    "alreadyHaveAccount": "Already have an account?",
+    "loginButton": "Sign In",
+    "registerButton": "Sign Up"
+  },
+  "calendar": {
+    "title": "Calendar",
+    "hello": "Hello",
+    "trackYourJourney": "Track your health journey",
+    "thisMonth": "This Month",
+    "daysLogged": "Days Logged",
+    "effortTracked": "Effort Tracked"
+  },
+  "day": {
+    "overview": "Overview",
+    "meals": "Meals",
+    "exercise": "Exercise",
+    "water": "Water",
+    "sleep": "Sleep",
+    "mood": "Mood",
+    "notes": "Notes"
+  },
+  "stats": {
+    "title": "Statistics",
+    "subtitle": "Track your progress over time",
+    "week": "Week",
+    "month": "Month",
+    "weightTrend": "Weight Trend",
+    "caloriesConsumed": "Calories Consumed",
+    "waterIntake": "Water Intake",
+    "sleepDuration": "Sleep Duration",
+    "exerciseDuration": "Exercise Duration",
+    "noData": "No data available for the selected period. Start tracking your health to see statistics here!"
+  },
+  "ai": {
+    "chatbot": "AI Chatbot",
+    "vision": "Vision Agent",
+    "coaches": "AI Coaches",
+    "nutritionCoach": "Nutrition Coach",
+    "workoutCoach": "Workout Coach",
+    "askQuestion": "Ask a question",
+    "getAdvice": "Get General Advice",
+    "analyzing": "Analyzing your data...",
+    "thinking": "Thinking..."
+  },
+  "profile": {
+    "title": "Profile & Settings",
+    "profileInfo": "Profile Information",
+    "settings": "Settings",
+    "about": "About",
+    "fullName": "Full Name",
+    "email": "Email",
+    "age": "Age",
+    "height": "Height (cm)",
+    "weight": "Weight (kg)",
+    "saveChanges": "Save Changes",
+    "language": "Language",
+    "notifications": "Notifications",
+    "notificationsDescription": "Daily reminders and insights",
+    "darkMode": "Dark Mode",
+    "darkModeDescription": "Switch to dark theme",
+    "version": "Version",
+    "privacyPolicy": "Privacy Policy",
+    "termsOfService": "Terms of Service",
+    "logout": "Logout",
+    "logoutConfirm": "Are you sure you want to logout?"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "confirm": "Confirm",
+    "close": "Close",
+    "yes": "Yes",
+    "no": "No"
+  }
+}

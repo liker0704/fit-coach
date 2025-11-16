@@ -1,6 +1,6 @@
 """LLM service for multi-provider AI support."""
 
-from typing import Any, Dict, Optional
+from typing import Any, AsyncIterator, Dict, Optional
 
 from langchain.schema import HumanMessage, SystemMessage
 from langchain_google_genai import ChatGoogleGenerativeAI
@@ -197,3 +197,100 @@ class LLMService:
             return response.content
         except Exception as e:
             raise Exception(f"Failed to generate {period} summary: {str(e)}")
+
+    @staticmethod
+    async def stream_chat_response(message: str, context: Optional[str] = None) -> AsyncIterator[str]:
+        """Stream chat responses token by token.
+
+        Args:
+            message: User message
+            context: Optional context about the conversation
+
+        Yields:
+            Tokens from the LLM response as they are generated
+
+        Raises:
+            ValueError: If LLM configuration is invalid
+            Exception: If LLM generation fails
+        """
+        llm = LLMService.get_llm()
+
+        # Build system prompt
+        system_prompt = (
+            "You are a professional health and fitness coach assistant. "
+            "Provide helpful, encouraging, and actionable advice. "
+            "Be conversational and supportive while staying evidence-based."
+        )
+
+        if context:
+            system_prompt += f"\n\nContext: {context}"
+
+        messages = [
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=message),
+        ]
+
+        try:
+            # Use astream for async streaming
+            async for chunk in llm.astream(messages):
+                if hasattr(chunk, 'content') and chunk.content:
+                    yield chunk.content
+        except Exception as e:
+            raise Exception(f"Failed to stream chat response: {str(e)}")
+
+    @staticmethod
+    async def stream_coaching_advice(user_data: Dict[str, Any], context: str) -> AsyncIterator[str]:
+        """Stream personalized coaching advice token by token.
+
+        Args:
+            user_data: Dictionary containing user profile and health data
+            context: Additional context about what type of advice is needed
+
+        Yields:
+            Tokens from the LLM response as they are generated
+
+        Raises:
+            ValueError: If LLM configuration is invalid
+            Exception: If LLM generation fails
+        """
+        llm = LLMService.get_llm()
+
+        # Build system prompt for coaching context
+        system_prompt = (
+            "You are a professional health and fitness coach. "
+            "Provide personalized, encouraging, and actionable advice. "
+            "Be supportive and motivating while staying realistic and evidence-based. "
+            "Keep responses concise and focused."
+        )
+
+        # Build user prompt with context and data
+        user_prompt = f"Context: {context}\n\n"
+        user_prompt += "User Profile:\n"
+
+        if user_data.get("full_name"):
+            user_prompt += f"- Name: {user_data['full_name']}\n"
+        if user_data.get("age"):
+            user_prompt += f"- Age: {user_data['age']}\n"
+        if user_data.get("weight"):
+            user_prompt += f"- Current Weight: {user_data['weight']} kg\n"
+        if user_data.get("target_weight"):
+            user_prompt += f"- Target Weight: {user_data['target_weight']} kg\n"
+        if user_data.get("height"):
+            user_prompt += f"- Height: {user_data['height']} cm\n"
+        if user_data.get("goals"):
+            user_prompt += f"- Goals: {', '.join(user_data['goals'])}\n"
+
+        user_prompt += "\nPlease provide personalized coaching advice."
+
+        messages = [
+            SystemMessage(content=system_prompt),
+            HumanMessage(content=user_prompt),
+        ]
+
+        try:
+            # Use astream for async streaming
+            async for chunk in llm.astream(messages):
+                if hasattr(chunk, 'content') and chunk.content:
+                    yield chunk.content
+        except Exception as e:
+            raise Exception(f"Failed to stream coaching advice: {str(e)}")
