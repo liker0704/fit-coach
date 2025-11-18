@@ -1,7 +1,10 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import { useStore } from '@/store';
 
-const API_BASE_URL = 'http://localhost:8001/api/v1';
+// Environment-based API URL configuration with fallback
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ||
+                     (window as any).env?.API_BASE_URL ||
+                     'http://localhost:8001/api/v1';
 const REQUEST_TIMEOUT = 30000;
 
 // Extend Axios request config to include _retry flag

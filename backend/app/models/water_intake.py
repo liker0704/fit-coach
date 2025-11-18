@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, Numeric
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, Numeric, func
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
@@ -21,11 +21,11 @@ class WaterIntake(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     # Foreign keys
-    day_id = Column(Integer, ForeignKey("days.id", ondelete="CASCADE"), nullable=False)
+    day_id = Column(Integer, ForeignKey("days.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Water info
     amount = Column(Numeric(3, 2), nullable=False)  # liters
-    time = Column(DateTime, default=datetime.utcnow, index=True)
+    time = Column(DateTime(timezone=True), server_default=func.now(), index=True)
 
     # Relationships
     day = relationship("Day", back_populates="water_intakes")

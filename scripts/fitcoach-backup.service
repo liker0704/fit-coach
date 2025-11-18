@@ -1,0 +1,52 @@
+# FitCoach Database Backup - Systemd Service Unit
+#
+# Installation:
+# 1. Copy to systemd directory:
+#    sudo cp fitcoach-backup.service /etc/systemd/system/
+# 2. Copy timer file:
+#    sudo cp fitcoach-backup.timer /etc/systemd/system/
+# 3. Reload systemd:
+#    sudo systemctl daemon-reload
+# 4. Enable timer:
+#    sudo systemctl enable fitcoach-backup.timer
+# 5. Start timer:
+#    sudo systemctl start fitcoach-backup.timer
+# 6. Check status:
+#    sudo systemctl status fitcoach-backup.timer
+#    sudo systemctl list-timers fitcoach-backup.timer
+#
+# Manual execution:
+#    sudo systemctl start fitcoach-backup.service
+#
+# View logs:
+#    sudo journalctl -u fitcoach-backup.service -f
+
+[Unit]
+Description=FitCoach Database Backup Service
+Documentation=file:///home/user/fit-coach/docs/BACKUP.md
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=root
+Group=root
+WorkingDirectory=/home/user/fit-coach
+ExecStart=/home/user/fit-coach/scripts/backup.sh --retention 30
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=fitcoach-backup
+
+# Security hardening
+PrivateTmp=yes
+NoNewPrivileges=yes
+ProtectSystem=strict
+ProtectHome=no
+ReadWritePaths=/home/user/fit-coach/backups
+
+# Timeout settings
+TimeoutStartSec=10min
+TimeoutStopSec=30s
+
+[Install]
+WantedBy=multi-user.target

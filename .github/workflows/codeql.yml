@@ -1,0 +1,118 @@
+name: CodeQL Security Analysis
+
+# Run CodeQL analysis for security vulnerabilities
+on:
+  push:
+    branches:
+      - main
+      - develop
+  pull_request:
+    branches:
+      - main
+      - develop
+  schedule:
+    # Run every Monday at 00:00 UTC
+    - cron: '0 0 * * 1'
+  workflow_dispatch:
+
+# Cancel in-progress runs when new commits are pushed
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  analyze:
+    name: Analyze (${{ matrix.language }})
+    runs-on: ${{ (matrix.language == 'swift' && 'macos-latest') || 'ubuntu-latest' }}
+    timeout-minutes: ${{ (matrix.language == 'swift' && 120) || 360 }}
+
+    permissions:
+      # Required for all workflows
+      security-events: write
+      # Required to fetch internal or private CodeQL packs
+      packages: read
+      # Only required for workflows in private repositories
+      actions: read
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # Analyze Python backend and JavaScript/TypeScript frontend
+        language: ['python', 'javascript-typescript']
+        include:
+          - language: python
+            build-mode: none
+            path: backend/
+          - language: javascript-typescript
+            build-mode: none
+            path: |
+              desktop/
+              mobile/
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          build-mode: ${{ matrix.build-mode }}
+          # Override default queries with custom security-and-quality suite
+          queries: +security-and-quality
+          # Specify source root for analysis
+          source-root: ${{ matrix.path }}
+
+      # Set up Python for Python analysis
+      - name: Set up Python 3.11
+        if: matrix.language == 'python'
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Python dependencies
+        if: matrix.language == 'python'
+        run: |
+          cd backend
+          pip install poetry
+          poetry install --no-interaction
+
+      # Set up Node.js for JavaScript/TypeScript analysis
+      - name: Set up Node.js 20
+        if: matrix.language == 'javascript-typescript'
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install JavaScript dependencies
+        if: matrix.language == 'javascript-typescript'
+        run: |
+          cd desktop && npm ci && cd ..
+          cd mobile && npm ci && cd ..
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{matrix.language}}"
+          # Upload results even if there are errors
+          upload: true
+          # Output SARIF file for review
+          output: sarif-results
+          # Add troubleshooting information
+          ram: 6000
+
+      - name: Upload SARIF results as artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: codeql-results-${{ matrix.language }}
+          path: sarif-results
+          retention-days: 30
+
+      - name: Security scan summary
+        if: always()
+        run: |
+          echo "### CodeQL Analysis Complete" >> $GITHUB_STEP_SUMMARY
+          echo "Language: ${{ matrix.language }}" >> $GITHUB_STEP_SUMMARY
+          echo "Check Security tab for detailed results" >> $GITHUB_STEP_SUMMARY

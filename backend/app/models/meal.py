@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, Numeric, String, Text, Time
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, Numeric, String, Text, Time, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
@@ -22,7 +22,7 @@ class Meal(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     # Foreign keys
-    day_id = Column(Integer, ForeignKey("days.id", ondelete="CASCADE"), nullable=False)
+    day_id = Column(Integer, ForeignKey("days.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Meal info
     category = Column(String(20), nullable=False, index=True)  # breakfast, lunch, dinner, snack
@@ -52,7 +52,7 @@ class Meal(Base):
     ai_suggestions = Column(Text)
 
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
     day = relationship("Day", back_populates="meals")

@@ -18,4 +18,9 @@ export default defineConfig(async () => ({
     port: 1420,
     strictPort: true,
   },
+
+  // Environment variables configuration
+  // Vite automatically loads .env files and exposes variables prefixed with VITE_
+  // Example: VITE_API_BASE_URL will be available as import.meta.env.VITE_API_BASE_URL
+  envPrefix: 'VITE_',
 }));

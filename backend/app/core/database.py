@@ -10,8 +10,11 @@ from app.config import settings
 engine = create_engine(
     str(settings.DATABASE_URL),
     pool_pre_ping=True,  # Verify connections before using
-    pool_size=5,
-    max_overflow=10,
+    pool_size=20,  # Increased from 5 to 20
+    max_overflow=40,  # Increased from 10 to 40
+    connect_args={
+        "options": "-c statement_timeout=30000"  # 30 seconds timeout for PostgreSQL
+    } if "postgresql" in str(settings.DATABASE_URL) else {},
 )
 
 # Create session factory
