@@ -1,0 +1,169 @@
+version: 2
+
+# Dependabot configuration for automated dependency updates
+# Updates are checked weekly and PRs are created automatically
+
+updates:
+  # Backend Python dependencies (Poetry)
+  - package-ecosystem: "pip"
+    directory: "/backend"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "liker0704"
+    assignees:
+      - "liker0704"
+    labels:
+      - "dependencies"
+      - "backend"
+      - "python"
+    commit-message:
+      prefix: "chore(backend)"
+      include: "scope"
+    # Group minor and patch updates together
+    groups:
+      backend-dependencies:
+        patterns:
+          - "*"
+        exclude-patterns:
+          - "fastapi"
+          - "sqlalchemy"
+          - "langchain*"
+        update-types:
+          - "minor"
+          - "patch"
+    # Allow Dependabot to update Poetry lockfile
+    versioning-strategy: increase
+
+  # Desktop npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/desktop"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "liker0704"
+    assignees:
+      - "liker0704"
+    labels:
+      - "dependencies"
+      - "desktop"
+      - "javascript"
+    commit-message:
+      prefix: "chore(desktop)"
+      include: "scope"
+    # Ignore Electron updates (needs manual testing)
+    ignore:
+      - dependency-name: "electron"
+        update-types: ["version-update:semver-major"]
+    # Group dependencies by type
+    groups:
+      desktop-react:
+        patterns:
+          - "react*"
+          - "@types/react*"
+        update-types:
+          - "minor"
+          - "patch"
+      desktop-radix:
+        patterns:
+          - "@radix-ui/*"
+        update-types:
+          - "minor"
+          - "patch"
+      desktop-dev:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+    versioning-strategy: increase
+
+  # Mobile npm dependencies
+  - package-ecosystem: "npm"
+    directory: "/mobile"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 10
+    reviewers:
+      - "liker0704"
+    assignees:
+      - "liker0704"
+    labels:
+      - "dependencies"
+      - "mobile"
+      - "javascript"
+    commit-message:
+      prefix: "chore(mobile)"
+      include: "scope"
+    # Ignore major Expo updates (needs manual migration)
+    ignore:
+      - dependency-name: "expo"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "react-native"
+        update-types: ["version-update:semver-major"]
+    # Group dependencies by scope
+    groups:
+      mobile-expo:
+        patterns:
+          - "expo*"
+        update-types:
+          - "minor"
+          - "patch"
+      mobile-react-native:
+        patterns:
+          - "react-native*"
+          - "@react-native*"
+        update-types:
+          - "minor"
+          - "patch"
+      mobile-react-navigation:
+        patterns:
+          - "@react-navigation/*"
+        update-types:
+          - "minor"
+          - "patch"
+      mobile-dev:
+        dependency-type: "development"
+        update-types:
+          - "minor"
+          - "patch"
+    versioning-strategy: increase
+
+  # GitHub Actions updates
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+      time: "09:00"
+      timezone: "UTC"
+    open-pull-requests-limit: 5
+    reviewers:
+      - "liker0704"
+    assignees:
+      - "liker0704"
+    labels:
+      - "dependencies"
+      - "github-actions"
+      - "ci/cd"
+    commit-message:
+      prefix: "chore(ci)"
+      include: "scope"
+    # Group all GitHub Actions updates together
+    groups:
+      github-actions:
+        patterns:
+          - "*"
+        update-types:
+          - "minor"
+          - "patch"

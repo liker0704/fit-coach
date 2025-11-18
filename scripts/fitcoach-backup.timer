@@ -1,0 +1,51 @@
+# FitCoach Database Backup - Systemd Timer Unit
+#
+# This timer triggers the backup service on a regular schedule
+#
+# Installation: See fitcoach-backup.service for installation instructions
+#
+# Schedule examples:
+# - OnCalendar=daily                    = Daily at midnight
+# - OnCalendar=*-*-* 01:00:00           = Daily at 1 AM
+# - OnCalendar=*-*-* 00/6:00:00         = Every 6 hours
+# - OnCalendar=Mon *-*-* 02:00:00       = Every Monday at 2 AM
+# - OnCalendar=*-*-01 03:00:00          = Monthly on 1st at 3 AM
+#
+# View next trigger time:
+#    systemctl list-timers fitcoach-backup.timer
+
+[Unit]
+Description=FitCoach Database Backup Timer
+Documentation=file:///home/user/fit-coach/docs/BACKUP.md
+Requires=fitcoach-backup.service
+
+[Timer]
+# Run every 6 hours (production schedule)
+OnCalendar=*-*-* 00/6:00:00
+
+# Alternative schedules (uncomment one):
+
+# Daily at 1 AM
+# OnCalendar=*-*-* 01:00:00
+
+# Twice daily (1 AM and 1 PM)
+# OnCalendar=*-*-* 01:00:00
+# OnCalendar=*-*-* 13:00:00
+
+# Weekly (Sunday at 2 AM)
+# OnCalendar=Sun *-*-* 02:00:00
+
+# Monthly (1st day at 3 AM)
+# OnCalendar=*-*-01 03:00:00
+
+# Run on boot (after 5 minutes) if last run was missed
+OnBootSec=5min
+
+# Ensure backup runs even if system was powered off at scheduled time
+Persistent=true
+
+# Randomize start time by up to 15 minutes to avoid system load spikes
+# RandomizedDelaySec=15min
+
+[Install]
+WantedBy=timers.target

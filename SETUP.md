@@ -215,18 +215,39 @@ This will install:
 - Axios (HTTP client)
 - And other dependencies from `package.json`
 
-### 3. Configure Backend API URL (Optional)
+### 3. Configure Environment Variables
 
-The default backend URL is `http://localhost:8001`. If your backend runs on a different port, update:
+The Desktop app uses environment variables for configuration. This is the **RECOMMENDED** approach to avoid hardcoded URLs.
 
-```typescript
-// src/services/api.ts
-const BASE_URL = process.env.VITE_API_URL || 'http://localhost:8001';
+```bash
+# Copy the example environment file
+cp .env.example .env
+
+# Edit .env if needed (default values work for local development)
+nano .env
 ```
 
-Or create `.env.local`:
+**Default `.env` contents:**
 ```env
-VITE_API_URL=http://localhost:8001
+# Backend API base URL
+VITE_API_BASE_URL=http://localhost:8001/api/v1
+
+# Application configuration
+VITE_APP_NAME=FitCoach
+VITE_APP_VERSION=0.1.0
+VITE_APP_ENV=development
+```
+
+**How it works:**
+- The API client (`src/services/api/client.ts`) automatically reads `VITE_API_BASE_URL`
+- If not set, it falls back to `http://localhost:8001/api/v1`
+- Variables must be prefixed with `VITE_` to be exposed to the client
+- Never commit `.env` files to Git (they're in `.gitignore`)
+
+**For production:**
+```bash
+cp .env.production.example .env.production
+# Edit .env.production with your production API URL
 ```
 
 ### 4. Start Desktop Development Server
@@ -257,22 +278,132 @@ The Electron window should open automatically. If not:
 
 ### 6. Build Desktop App for Production (Optional)
 
+**Before building for production:**
+
+1. Create production environment file:
+   ```bash
+   cp .env.production.example .env.production
+   ```
+
+2. Update with your production API URL:
+   ```bash
+   nano .env.production
+   # Set: VITE_API_BASE_URL=https://api.fitcoach.com/api/v1
+   ```
+
+3. Build the application:
+   ```bash
+   # Build for current platform
+   npm run build
+   npm run package
+
+   # Build for specific platform
+   npm run package:linux
+
+   # Output will be in /release directory
+   ```
+
+---
+
+## Mobile Setup
+
+### 1. Navigate to Mobile Directory
 ```bash
-# Build for current platform
-npm run build
-npm run package
-
-# Build for specific platform
-npm run package:linux
-
-# Output will be in /release directory
+cd /path/to/fit-coach/mobile
 ```
+
+### 2. Install Dependencies
+```bash
+npm install
+```
+
+This will install:
+- React Native (Expo)
+- TypeScript
+- React Navigation
+- Axios
+- expo-constants (for environment variables)
+- And other dependencies from `package.json`
+
+### 3. Configure Environment Variables
+
+The Mobile app uses environment variables for configuration.
+
+```bash
+# Copy the example environment file
+cp .env.example .env
+
+# Edit .env with your settings
+nano .env
+```
+
+**For Simulator/Emulator (localhost works):**
+```env
+EXPO_PUBLIC_API_BASE_URL=http://localhost:8001/api/v1
+```
+
+**For Physical Device (use your computer's local IP):**
+```bash
+# Find your local IP
+# macOS/Linux:
+ifconfig | grep "inet " | grep -v 127.0.0.1
+
+# Windows:
+ipconfig
+```
+
+Update `.env`:
+```env
+# Replace with your actual IP address
+EXPO_PUBLIC_API_BASE_URL=http://192.168.1.100:8001/api/v1
+```
+
+**How it works:**
+- The API client (`src/services/api/apiClient.ts`) reads `EXPO_PUBLIC_API_BASE_URL`
+- Variables are also available via `Constants.expoConfig.extra` (configured in `app.config.js`)
+- Variables must be prefixed with `EXPO_PUBLIC_`
+- Never commit `.env` files to Git (they're in `.gitignore`)
+
+**Important for device testing:**
+- Your device and computer must be on the same Wi-Fi network
+- Backend server must be accessible from your device
+- Firewall must allow connections on port 8001
+
+**For production:**
+```bash
+cp .env.production.example .env.production
+# Edit .env.production with your production API URL
+```
+
+### 4. Start Mobile Development Server
+
+```bash
+# Start Expo development server
+npm start
+
+# Or run on specific platform
+npm run ios      # iOS Simulator (macOS only)
+npm run android  # Android Emulator
+npm run web      # Web browser (for testing)
+```
+
+### 5. Testing on Physical Devices
+
+1. Install **Expo Go** app on your device:
+   - iOS: [App Store](https://apps.apple.com/app/expo-go/id982107779)
+   - Android: [Google Play](https://play.google.com/store/apps/details?id=host.exp.exponent)
+
+2. Ensure device and computer are on same Wi-Fi
+
+3. Scan QR code from terminal with Expo Go app
+
+4. If connection fails, update `.env` with your local IP address
 
 ---
 
 ## Full-Stack Development
 
-To run both backend and desktop simultaneously:
+To run backend, desktop, and mobile simultaneously:
 
 ### Terminal 1: Backend
 ```bash
@@ -281,13 +412,21 @@ source venv/bin/activate
 python main.py
 ```
 
-### Terminal 2: Desktop
+### Terminal 2: Desktop (Optional)
 ```bash
 cd desktop
+# Make sure .env is configured
 npm run dev
 ```
 
-### Terminal 3: Database (if using Docker)
+### Terminal 3: Mobile (Optional)
+```bash
+cd mobile
+# Make sure .env is configured
+npm start
+```
+
+### Terminal 4: Database (if using Docker)
 ```bash
 cd backend
 docker-compose up
@@ -295,12 +434,27 @@ docker-compose up
 
 ### Typical Development Flow
 
-1. **Start Backend** → Wait for "Application startup complete"
-2. **Start Desktop** → Electron window opens
-3. **Register a user** → Use desktop UI or Swagger UI
-4. **Login** → JWT tokens stored in localStorage
-5. **Create daily entries** → Track meals, exercises, etc.
-6. **Test API** → Use Swagger UI at http://localhost:8001/docs
+1. **Configure Environment Variables** → Set up `.env` files for Desktop and Mobile
+2. **Start Backend** → Wait for "Application startup complete"
+3. **Start Desktop and/or Mobile** → Applications connect to backend
+4. **Register a user** → Use Desktop/Mobile UI or Swagger UI
+5. **Login** → JWT tokens stored securely
+6. **Create daily entries** → Track meals, exercises, etc.
+7. **Test API** → Use Swagger UI at http://localhost:8001/docs
+
+### Environment Configuration Summary
+
+| Component | Config File | API URL Variable | Default Value |
+|-----------|-------------|------------------|---------------|
+| **Backend** | `.env` | `POSTGRES_SERVER`, etc. | Various |
+| **Desktop** | `.env` | `VITE_API_BASE_URL` | `http://localhost:8001/api/v1` |
+| **Mobile** | `.env` | `EXPO_PUBLIC_API_BASE_URL` | `http://localhost:8001/api/v1` |
+
+**Key Points:**
+- All `.env` files are in `.gitignore` (never committed)
+- All `.env.example` files are committed as documentation
+- Copy `.env.example` to `.env` and customize as needed
+- For production, create `.env.production` with production URLs
 
 ---
 
@@ -440,12 +594,16 @@ npx shadcn@latest add input
 ```
 
 #### 2. "ECONNREFUSED 127.0.0.1:8001"
-**Solution**: Backend is not running:
+**Solution**: Backend is not running or wrong API URL:
 ```bash
-# Start backend first
+# Option 1: Start backend
 cd backend
 source venv/bin/activate
 python main.py
+
+# Option 2: Check .env configuration
+cat .env | grep VITE_API_BASE_URL
+# Should match your backend URL
 ```
 
 #### 3. "Electron failed to start"
@@ -494,18 +652,64 @@ sudo systemctl stop postgresql
 POSTGRES_PORT=5433
 ```
 
+### Mobile Issues
+
+#### 1. "Network Error" when testing on device
+**Solution**: Update API URL in `.env` to use your computer's local IP:
+```bash
+# Find your local IP
+ifconfig | grep "inet " | grep -v 127.0.0.1  # macOS/Linux
+ipconfig  # Windows
+
+# Update .env
+EXPO_PUBLIC_API_BASE_URL=http://192.168.1.100:8001/api/v1
+```
+
+#### 2. "Cannot connect to Expo Dev Server"
+**Solution**: Ensure device and computer are on same Wi-Fi:
+```bash
+# Option 1: Try tunnel mode
+expo start --tunnel
+
+# Option 2: Check firewall settings
+# Ensure ports 8001 and 19000-19006 are open
+```
+
 ### Common Issues
 
-#### 1. "Permission denied" when running scripts
+#### 1. "API URL not updating after .env change"
+**Solution**: Restart development server after changing `.env`:
+```bash
+# Desktop
+npm run dev  # Restart
+
+# Mobile
+npm start  # Restart and clear cache
+```
+
+#### 2. "Permission denied" when running scripts
 **Solution**: Make scripts executable:
 ```bash
 chmod +x script_name.sh
 ```
 
-#### 2. CORS errors in browser console
+#### 3. CORS errors in browser console
 **Solution**: Check backend CORS settings in `app/core/config.py`:
 ```python
 BACKEND_CORS_ORIGINS = ["http://localhost:5173", "http://127.0.0.1:5173"]
+```
+
+#### 4. "Environment variable not defined"
+**Solution**: Ensure `.env` file exists and variables are prefixed correctly:
+```bash
+# Desktop: Variables must start with VITE_
+VITE_API_BASE_URL=http://localhost:8001/api/v1
+
+# Mobile: Variables must start with EXPO_PUBLIC_
+EXPO_PUBLIC_API_BASE_URL=http://localhost:8001/api/v1
+
+# Check if .env exists
+ls -la .env
 ```
 
 #### 3. Slow performance on Linux (charts)

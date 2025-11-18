@@ -1,0 +1,69 @@
+# Git
+.git
+.gitignore
+.gitattributes
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+venv/
+env/
+ENV/
+.venv
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+.tox/
+tests/
+test_*.py
+test_*.json
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Documentation (not needed in image)
+*.md
+docs/
+AGENTS_API_DOCUMENTATION.md
+BACKEND_MVP_VERIFICATION.md
+GEMINI_VISION_SETUP.md
+README.md
+SERVICES.md
+SLEEP_TEST_REPORT.md
+SLEEP_TEST_SUMMARY.md
+TEST_REPORT.md
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Uploads and temp
+uploads/
+temp/
+*.db
+*.sqlite3
+
+# Development tools
+poetry.lock
+Makefile
+docker-compose*.yml
+Dockerfile*

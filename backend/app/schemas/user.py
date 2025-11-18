@@ -3,7 +3,9 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator
+
+from app.core.password_validator import get_password_validator
 
 
 class UserBase(BaseModel):
@@ -21,6 +23,36 @@ class UserCreate(UserBase):
     age: Optional[int] = Field(None, ge=10, le=120)
     height: Optional[float] = Field(None, ge=50, le=300)  # in cm
     weight: Optional[float] = Field(None, ge=20, le=500)  # in kg
+
+    @field_validator('password')
+    @classmethod
+    def validate_password_complexity(cls, v: str, info) -> str:
+        """Validate password complexity requirements.
+
+        Args:
+            v: Password value
+            info: Validation info containing other fields
+
+        Returns:
+            Password if valid
+
+        Raises:
+            ValueError: If password doesn't meet requirements
+        """
+        validator = get_password_validator()
+
+        # Get username and email from context if available
+        username = info.data.get('username')
+        email = info.data.get('email')
+
+        is_valid, errors = validator.validate(v, username=username, email=email)
+
+        if not is_valid:
+            # Create detailed error message
+            error_msg = "Password validation failed:\n- " + "\n- ".join(errors)
+            raise ValueError(error_msg)
+
+        return v
 
 
 class UserUpdate(BaseModel):
@@ -78,3 +110,26 @@ class ChangePasswordRequest(BaseModel):
 
     current_password: str = Field(..., min_length=1)
     new_password: str = Field(..., min_length=8, max_length=100)
+
+    @field_validator('new_password')
+    @classmethod
+    def validate_password_complexity(cls, v: str) -> str:
+        """Validate new password complexity requirements.
+
+        Args:
+            v: New password value
+
+        Returns:
+            Password if valid
+
+        Raises:
+            ValueError: If password doesn't meet requirements
+        """
+        validator = get_password_validator()
+        is_valid, errors = validator.validate(v)
+
+        if not is_valid:
+            error_msg = "Password validation failed:\n- " + "\n- ".join(errors)
+            raise ValueError(error_msg)
+
+        return v

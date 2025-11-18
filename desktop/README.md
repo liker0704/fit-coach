@@ -114,14 +114,23 @@ cd /path/to/fit-coach/desktop
 npm install
 ```
 
-3. **Install Tauri CLI**
+3. **Configure environment variables**
+```bash
+# Copy the example environment file
+cp .env.example .env
+
+# Edit .env if needed (default values work for local development)
+# VITE_API_BASE_URL=http://localhost:8001/api/v1
+```
+
+4. **Install Tauri CLI**
 ```bash
 cargo install tauri-cli
 # or use npm version
 npm install -g @tauri-apps/cli
 ```
 
-4. **Start development server**
+5. **Start development server**
 ```bash
 # Terminal 1: Start backend API
 cd ../backend
@@ -133,7 +142,7 @@ cd ../desktop
 npm run tauri dev
 ```
 
-5. **Build for production**
+6. **Build for production**
 ```bash
 npm run tauri build
 ```
@@ -144,13 +153,56 @@ The built application will be in `src-tauri/target/release/bundle/`
 
 ### Environment Variables
 
-API base URL is configured in `src/services/api/client.ts`:
+The application uses environment variables for configuration. This allows you to configure different settings for development and production without changing the code.
 
-```typescript
-const API_BASE_URL = 'http://localhost:8001/api/v1';
-```
+**Setup:**
 
-For production, update this to your backend URL.
+1. **Copy the example file:**
+   ```bash
+   cp .env.example .env
+   ```
+
+2. **Edit `.env` with your settings:**
+   ```env
+   # Development
+   VITE_API_BASE_URL=http://localhost:8001/api/v1
+   VITE_APP_NAME=FitCoach
+   VITE_APP_VERSION=0.1.0
+   ```
+
+3. **For production builds, create `.env.production`:**
+   ```bash
+   cp .env.production.example .env.production
+   ```
+
+   Then update with your production API URL:
+   ```env
+   # Production
+   VITE_API_BASE_URL=https://api.fitcoach.com/api/v1
+   ```
+
+**Available Variables:**
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `VITE_API_BASE_URL` | Backend API base URL | `http://localhost:8001/api/v1` |
+| `VITE_APP_NAME` | Application name | `FitCoach` |
+| `VITE_APP_VERSION` | Application version | `0.1.0` |
+| `VITE_APP_ENV` | Environment (development/production) | `development` |
+| `VITE_DEBUG_MODE` | Enable debug mode | `false` |
+| `VITE_ANALYTICS_ID` | Analytics tracking ID (optional) | - |
+
+**How it works:**
+
+- The API client (`src/services/api/client.ts`) automatically reads `VITE_API_BASE_URL`
+- If not set, it falls back to `http://localhost:8001/api/v1`
+- Vite loads `.env` files automatically based on the build mode
+- Variables must be prefixed with `VITE_` to be exposed to the client
+
+**Important:**
+- Never commit `.env` files to Git (they're in `.gitignore`)
+- Always commit `.env.example` files as documentation
+- Update `.env.production` before building for production
 
 ### Tauri Permissions
 
@@ -772,7 +824,8 @@ open fitcoach_0.1.0_universal.dmg
 
 ### Production Checklist
 
-- [ ] Update API base URL to production backend
+- [ ] Create `.env.production` from `.env.production.example`
+- [ ] Update `VITE_API_BASE_URL` to production backend URL
 - [ ] Enable HTTPS for API calls
 - [ ] Remove debug logging
 - [ ] Test on target platforms (Linux/Windows/macOS)

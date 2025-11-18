@@ -1,0 +1,41 @@
+# FitCoach Automated Backup Cron Jobs
+#
+# Installation:
+# 1. Review and adjust paths and schedule below
+# 2. Install: crontab -l > /tmp/mycron && cat backup.cron >> /tmp/mycron && crontab /tmp/mycron
+# 3. Verify: crontab -l
+#
+# Cron format: minute hour day month weekday command
+#
+# Examples:
+# - "0 1 * * *"     = Daily at 1:00 AM
+# - "0 */6 * * *"   = Every 6 hours
+# - "0 2 * * 0"     = Weekly on Sunday at 2:00 AM
+# - "0 3 1 * *"     = Monthly on 1st day at 3:00 AM
+
+# ============================================================================
+# Production Schedule - Every 6 hours
+# ============================================================================
+0 */6 * * * cd /home/user/fit-coach && ./scripts/backup.sh --retention 30 >> /home/user/fit-coach/backups/backup.log 2>&1
+
+# ============================================================================
+# Alternative Schedules (uncomment one)
+# ============================================================================
+
+# Daily backup at 1:00 AM
+# 0 1 * * * cd /home/user/fit-coach && ./scripts/backup.sh --retention 30 >> /home/user/fit-coach/backups/backup.log 2>&1
+
+# Twice daily (1 AM and 1 PM)
+# 0 1,13 * * * cd /home/user/fit-coach && ./scripts/backup.sh --retention 30 >> /home/user/fit-coach/backups/backup.log 2>&1
+
+# Weekly (Sunday at 2 AM)
+# 0 2 * * 0 cd /home/user/fit-coach && ./scripts/backup.sh --retention 90 >> /home/user/fit-coach/backups/backup.log 2>&1
+
+# Monthly (1st day at 3 AM)
+# 0 3 1 * * cd /home/user/fit-coach && ./scripts/backup.sh --retention 365 >> /home/user/fit-coach/backups/backup.log 2>&1
+
+# ============================================================================
+# Monitoring (Optional)
+# ============================================================================
+# Check backup age every hour and alert if too old
+# 0 * * * * /home/user/fit-coach/scripts/backup-monitor.sh || echo "Backup is outdated!" | mail -s "FitCoach Backup Alert" admin@example.com

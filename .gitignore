@@ -33,6 +33,7 @@ poetry.lock
 .env
 .env.local
 .env.*.local
+.env.docker
 
 # IDE
 .vscode/
@@ -55,6 +56,11 @@ htmlcov/
 # Logs
 *.log
 logs/
+
+# Backups
+backups/
+*.sql
+*.sql.gz
 
 # Uploads
 uploads/

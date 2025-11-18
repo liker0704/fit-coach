@@ -12,6 +12,7 @@ from langchain_core.messages import AIMessage
 from sqlalchemy.orm import Session
 
 from app.services.llm_service import LLMService
+from app.agents.prompt_sanitizer import get_sanitizer
 
 # Setup logger
 logger = logging.getLogger(__name__)
@@ -422,16 +423,46 @@ class BaseAgent(ABC):
 
         return total
 
+    def sanitize_input(self, text: str) -> str:
+        """Sanitize user input to prevent prompt injection.
+
+        Uses the global prompt sanitizer to clean user inputs before
+        they are sent to the LLM. This prevents prompt injection attacks.
+
+        Args:
+            text: User input to sanitize
+
+        Returns:
+            Sanitized text safe for LLM processing
+
+        Example:
+            ```python
+            user_message = self.sanitize_input(user_input)
+            messages = [HumanMessage(content=user_message)]
+            ```
+        """
+        sanitizer = get_sanitizer()
+        sanitized, warnings = sanitizer.sanitize(text, user_id=self.user_id)
+
+        if warnings:
+            logger.warning(
+                f"Input sanitized for {self.agent_type} (user {self.user_id}). "
+                f"Warnings: {warnings}"
+            )
+
+        return sanitized
+
     async def safe_llm_invoke(
-        self, messages: list, **kwargs
+        self, messages: list, sanitize_user_inputs: bool = True, **kwargs
     ) -> Optional[AIMessage]:
-        """Safely invoke LLM with error handling.
+        """Safely invoke LLM with error handling and input sanitization.
 
         Wrapper around LLM invocation that provides consistent error handling,
-        logging, and automatic usage tracking.
+        logging, automatic usage tracking, and prompt injection protection.
 
         Args:
             messages: List of LangChain messages to send to LLM
+            sanitize_user_inputs: If True, sanitize HumanMessage content (default: True)
             **kwargs: Additional arguments to pass to LLM (temperature, max_tokens, etc.)
 
         Returns:
@@ -452,6 +483,23 @@ class BaseAgent(ABC):
             ```
         """
         try:
+            # Sanitize user inputs in messages (if enabled)
+            if sanitize_user_inputs:
+                from langchain_core.messages import HumanMessage
+                sanitized_messages = []
+
+                for msg in messages:
+                    if isinstance(msg, HumanMessage):
+                        # Sanitize human messages to prevent prompt injection
+                        sanitized_content = self.sanitize_input(msg.content)
+                        sanitized_msg = HumanMessage(content=sanitized_content)
+                        sanitized_messages.append(sanitized_msg)
+                    else:
+                        # Keep system/AI messages as-is
+                        sanitized_messages.append(msg)
+
+                messages = sanitized_messages
+
             # Count input tokens
             tokens_in = self.count_message_tokens(messages)
 

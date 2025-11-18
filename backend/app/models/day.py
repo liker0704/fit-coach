@@ -3,7 +3,7 @@
 from datetime import date
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, Date, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import Column, Date, ForeignKey, Integer, Numeric, String, Text, UniqueConstraint
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
@@ -63,7 +63,7 @@ class Day(Base):
         return f"<Day {self.date} - User {self.user_id}>"
 
     __table_args__ = (
-        # Unique constraint: one day per user
-        # Index for querying by user and date
+        # Unique constraint: one day per user per date
+        UniqueConstraint('user_id', 'date', name='uq_user_date'),
         {"sqlite_autoincrement": True},
     )

@@ -99,6 +99,10 @@ cd mobile
 # Install dependencies
 npm install
 
+# Configure environment variables
+cp .env.example .env
+# Edit .env if needed (default localhost works for simulators)
+
 # Start development server
 npm start
 ```
@@ -217,28 +221,88 @@ Language is automatically detected from device settings. Users can change langua
 
 ## 🔐 Environment Configuration
 
-### Backend URL
+### Environment Variables
 
-Currently set to `http://localhost:8001/api/v1` in `src/services/api/apiClient.ts`.
+The application uses environment variables for configuration. This allows you to configure different settings for development and production without changing the code.
 
-**For device testing**, update to your computer's local IP:
+**Setup:**
 
-```typescript
-// src/services/api/apiClient.ts
-const API_BASE_URL = 'http://192.168.1.XXX:8001/api/v1';  // Replace with your IP
-```
+1. **Copy the example file:**
+   ```bash
+   cp .env.example .env
+   ```
 
-### Finding Your Local IP
+2. **Edit `.env` with your settings:**
+   ```env
+   # For simulator/emulator (localhost works)
+   EXPO_PUBLIC_API_BASE_URL=http://localhost:8001/api/v1
+
+   # For physical device (use your computer's local IP)
+   # EXPO_PUBLIC_API_BASE_URL=http://192.168.1.100:8001/api/v1
+   ```
+
+3. **For production builds, create `.env.production`:**
+   ```bash
+   cp .env.production.example .env.production
+   ```
+
+   Then update with your production API URL:
+   ```env
+   # Production
+   EXPO_PUBLIC_API_BASE_URL=https://api.fitcoach.com/api/v1
+   ```
+
+**Available Variables:**
+
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `EXPO_PUBLIC_API_BASE_URL` | Backend API base URL | `http://localhost:8001/api/v1` |
+| `EXPO_PUBLIC_APP_NAME` | Application name | `FitCoach` |
+| `EXPO_PUBLIC_APP_VERSION` | Application version | `1.0.0` |
+| `EXPO_PUBLIC_APP_ENV` | Environment (development/production) | `development` |
+| `EXPO_PUBLIC_DEBUG_MODE` | Enable debug mode | `true` |
+| `EXPO_PUBLIC_ANALYTICS_ID` | Analytics tracking ID (optional) | - |
+
+**How it works:**
+
+- The API client (`src/services/api/apiClient.ts`) automatically reads `EXPO_PUBLIC_API_BASE_URL`
+- If not set, it falls back to `http://localhost:8001/api/v1`
+- Expo reads environment variables prefixed with `EXPO_PUBLIC_`
+- Variables are also available via `Constants.expoConfig.extra` (configured in `app.config.js`)
+
+**Important:**
+- Never commit `.env` files to Git (they're in `.gitignore`)
+- Always commit `.env.example` files as documentation
+- Update `.env.production` before building for production
+
+### Testing on Physical Devices
+
+**IMPORTANT:** When testing on a physical device or simulator, `localhost` won't work. You need to use your computer's local IP address.
+
+**Finding Your Local IP:**
 
 **macOS/Linux:**
 ```bash
 ifconfig | grep "inet " | grep -v 127.0.0.1
+# Example output: inet 192.168.1.100
 ```
 
 **Windows:**
 ```bash
 ipconfig
+# Look for IPv4 Address under your network adapter
 ```
+
+**Update `.env`:**
+```env
+# Replace XXX with your actual IP address
+EXPO_PUBLIC_API_BASE_URL=http://192.168.1.100:8001/api/v1
+```
+
+**Requirements:**
+- Your device and computer must be on the same Wi-Fi network
+- Firewall must allow connections on port 8001
+- Backend server must be running and accessible
 
 ## 🔗 API Endpoints Used
 

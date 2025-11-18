@@ -15,6 +15,7 @@ from app.agents.agents import (
     WorkoutCoachAgent,
 )
 from app.core.dependencies import get_current_user, get_db
+from app.core.llm_rate_limiter import check_llm_rate_limit
 from app.models.user import User
 from app.services.llm_service import LLMService
 from app.services.agent_coordinator import AgentCoordinator
@@ -160,13 +161,16 @@ async def chat(
         ChatResponse with bot's response
 
     Raises:
-        HTTPException: 400 if message is empty, 500 if chat fails
+        HTTPException: 400 if message is empty, 429 if rate limit exceeded, 500 if chat fails
     """
     if not request.message.strip():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Message cannot be empty"
         )
+
+    # Check LLM rate limit
+    await check_llm_rate_limit(current_user.id, "chatbot")
 
     try:
         logger.info(f"Processing chat message for user {current_user.id}")
@@ -223,13 +227,16 @@ async def nutrition_coach(
         CoachResponse with nutrition advice
 
     Raises:
-        HTTPException: 400 if question is empty, 500 if coaching fails
+        HTTPException: 400 if question is empty, 429 if rate limit exceeded, 500 if coaching fails
     """
     if not request.question.strip():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Question cannot be empty"
         )
+
+    # Check LLM rate limit
+    await check_llm_rate_limit(current_user.id, "nutrition_coach")
 
     try:
         logger.info(f"Processing nutrition coaching request for user {current_user.id}")
@@ -288,13 +295,16 @@ async def workout_coach(
         CoachResponse with workout advice
 
     Raises:
-        HTTPException: 400 if question is empty, 500 if coaching fails
+        HTTPException: 400 if question is empty, 429 if rate limit exceeded, 500 if coaching fails
     """
     if not request.question.strip():
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Question cannot be empty"
         )
+
+    # Check LLM rate limit
+    await check_llm_rate_limit(current_user.id, "workout_coach")
 
     try:
         logger.info(f"Processing workout coaching request for user {current_user.id}")

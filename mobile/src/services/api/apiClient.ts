@@ -1,7 +1,11 @@
 import axios, { AxiosError, InternalAxiosRequestConfig } from 'axios';
 import * as SecureStore from 'expo-secure-store';
+import Constants from 'expo-constants';
 
-const API_BASE_URL = 'http://localhost:8001/api/v1';
+// Environment-based API URL configuration with fallback
+const API_BASE_URL = Constants.expoConfig?.extra?.apiBaseUrl ||
+                     process.env.EXPO_PUBLIC_API_BASE_URL ||
+                     'http://localhost:8001/api/v1';
 const REQUEST_TIMEOUT = 30000;
 
 // SecureStore keys

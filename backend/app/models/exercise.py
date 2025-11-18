@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, Numeric, String, Text
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, Numeric, String, Text, func
 from sqlalchemy.orm import relationship
 
 from app.core.database import Base
@@ -21,7 +21,7 @@ class Exercise(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     # Foreign keys
-    day_id = Column(Integer, ForeignKey("days.id", ondelete="CASCADE"), nullable=False)
+    day_id = Column(Integer, ForeignKey("days.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Exercise info
     type = Column(String(50), nullable=False, index=True)  # running, gym, yoga, cycling
@@ -46,7 +46,7 @@ class Exercise(Base):
     ai_recommendations = Column(Text)
 
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships
     day = relationship("Day", back_populates="exercises")

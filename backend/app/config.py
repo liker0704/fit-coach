@@ -118,5 +118,13 @@ class Settings(BaseSettings):
     SMTP_PASSWORD: Optional[str] = None  # App password for SMTP
     FRONTEND_URL: str = "http://localhost:5173"  # Frontend URL for email links
 
+    # Logging Configuration
+    LOG_LEVEL: str = "INFO"  # DEBUG, INFO, WARNING, ERROR, CRITICAL
+    ENVIRONMENT: str = "development"  # development, staging, production
+
+    # Error Tracking (Sentry)
+    SENTRY_DSN: Optional[str] = None  # Set in production for error tracking
+    SENTRY_ENVIRONMENT: Optional[str] = None  # Override ENVIRONMENT for Sentry
+
 
 settings = Settings()

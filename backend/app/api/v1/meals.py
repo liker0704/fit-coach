@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from app.agents.agents.vision_agent import VisionAgent
 from app.config import settings
 from app.core.dependencies import get_current_user, get_db
+from app.core.file_validator import validate_image_upload
 from app.models.day import Day
 from app.models.meal import Meal
 from app.models.user import User
@@ -362,33 +363,17 @@ async def upload_meal_photo(
             detail="Not authorized to add meals to this day",
         )
 
-    # Validate file type
-    if not file.content_type or not file.content_type.startswith("image/"):
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="File must be an image (PNG, JPG, JPEG)",
-        )
-
-    # Validate file size (max 10MB by default)
-    max_size = settings.MAX_PHOTO_SIZE_MB * 1024 * 1024
-    file.file.seek(0, 2)  # Seek to end
-    file_size = file.file.tell()
-    file.file.seek(0)  # Reset to beginning
-
-    if file_size > max_size:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=f"File size must be less than {settings.MAX_PHOTO_SIZE_MB}MB",
-        )
+    # Validate uploaded file (security checks)
+    safe_filename = await validate_image_upload(file)
 
     # Create meal_photos directory if not exists
     upload_dir = Path(settings.MEAL_PHOTOS_DIR)
     upload_dir.mkdir(parents=True, exist_ok=True)
 
-    # Generate unique filename
+    # Generate unique filename using sanitized filename
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
     unique_id = str(uuid.uuid4())[:8]
-    file_ext = Path(file.filename or "photo.jpg").suffix
+    file_ext = Path(safe_filename).suffix
     filename = f"{current_user.id}_{timestamp}_{unique_id}{file_ext}"
     file_path = upload_dir / filename
 

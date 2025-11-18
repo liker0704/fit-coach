@@ -3,7 +3,7 @@
 from datetime import datetime
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text
+from sqlalchemy import Column, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
 
@@ -22,7 +22,7 @@ class Note(Base):
     id = Column(Integer, primary_key=True, index=True)
 
     # Foreign keys
-    day_id = Column(Integer, ForeignKey("days.id", ondelete="CASCADE"), nullable=False)
+    day_id = Column(Integer, ForeignKey("days.id", ondelete="CASCADE"), nullable=False, index=True)
 
     # Note info
     title = Column(String(255))
@@ -33,8 +33,8 @@ class Note(Base):
     attachments = Column(JSONB)  # URLs to files
 
     # Timestamps
-    created_at = Column(DateTime, default=datetime.utcnow, index=True)
-    updated_at = Column(DateTime, onupdate=datetime.utcnow)
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
     # Relationships
     day = relationship("Day", back_populates="notes")

@@ -158,10 +158,29 @@ Before deploying to production:
 - [ ] Run database migration: `alembic upgrade head`
 - [ ] Install dependencies: `pip install -r requirements.txt`
 - [ ] Review file upload limits and storage
-- [ ] Set up database backups
+- [x] Set up database backups ✅
 - [ ] Configure logging and monitoring
 - [ ] Remove any debug/development endpoints
 - [ ] Set `docs_url=None` and `redoc_url=None` in production
+
+#### Docker & DevOps ✅ NEW
+- [x] No hardcoded credentials in docker-compose.yml ✅
+- [x] Environment variables in `.env.docker` (gitignored) ✅
+- [x] Strong passwords (minimum 16 characters) ✅
+- [x] Non-root user in Docker containers (UID 1000) ✅
+- [x] Multi-stage Docker build for minimal attack surface ✅
+- [x] Health checks enabled for all services ✅
+- [x] Resource limits configured ✅
+- [x] Restart policy set to `always` ✅
+- [x] Automated backup script with compression and rotation ✅
+- [x] Restore script with pre-restore safety backup ✅
+- [ ] Schedule automated backups (cron or systemd timer)
+- [ ] Test backup/restore procedures
+- [ ] Configure off-site backup storage
+- [ ] Enable backup encryption (GPG)
+- [ ] Set up firewall rules (UFW/iptables)
+- [ ] Configure reverse proxy with SSL (Nginx)
+- [ ] Scan Docker images for vulnerabilities (Trivy)
 
 #### Mobile App
 - [ ] Update `API_BASE_URL` to production HTTPS endpoint
@@ -218,6 +237,205 @@ The following features should be considered for production:
 8. **API Key Rotation**
    - No automatic rotation of API keys
    - **Recommendation**: Implement key rotation policy
+
+## 🐳 Docker & DevOps Security ✨ NEW
+
+### Container Security
+
+#### ✅ Implemented Measures
+
+1. **Non-Root Containers**
+   - All production containers run as non-root user (UID 1000)
+   - Backend uses dedicated `fitcoach` user
+   - Minimizes privilege escalation risks
+
+2. **Multi-Stage Builds**
+   - Optimized Dockerfile with multi-stage builds
+   - Minimal production image (python:3.11-slim)
+   - Build tools excluded from final image
+   - Reduced attack surface
+
+3. **Resource Limits**
+   - CPU and memory limits configured
+   - Prevents resource exhaustion attacks
+   - Production limits in `docker-compose.production.yml`
+
+4. **Health Checks**
+   - All services have health checks
+   - Automatic container restart on failures
+   - Monitoring integration ready
+
+### Credentials Management ✅
+
+**CRITICAL SECURITY FIX**: All hardcoded credentials removed!
+
+1. **Environment Variables**
+   - `.env.docker` for all credentials
+   - Required variables: `POSTGRES_PASSWORD`, `PGADMIN_DEFAULT_PASSWORD`
+   - Validation: Docker Compose fails if variables missing
+   - Template: `.env.docker.example` for setup
+
+2. **GitIgnore Protection**
+   - `.env.docker` added to `.gitignore`
+   - Backup files (`.sql`, `.sql.gz`) excluded
+   - `backups/` directory excluded
+
+### Database Backup Strategy ✅
+
+**Production-ready backup and restore solution implemented!**
+
+#### Backup Script (`scripts/backup.sh`)
+- Automated PostgreSQL backups via `pg_dump`
+- gzip compression for space efficiency
+- 30-day retention with automatic rotation
+- Integrity verification after backup
+- Comprehensive error handling
+- Detailed logging to `backups/backup.log`
+
+#### Restore Script (`scripts/restore.sh`)
+- Safe restore with pre-restore backup
+- Confirmation prompt (can be forced)
+- Active connection termination
+- Transaction-safe restore
+- Post-restore verification
+
+#### Automation Options
+- **Cron**: Example schedules in `scripts/backup.cron`
+- **Systemd**: Timer units in `scripts/fitcoach-backup.{service,timer}`
+- Recommended: Every 6 hours for production
+
+#### Security Features
+- Backup file encryption support (GPG)
+- Restrictive file permissions (600)
+- Off-site backup ready (rsync, S3 sync)
+- No credentials in scripts (loaded from `.env.docker`)
+
+**Documentation**: See [docs/BACKUP.md](docs/BACKUP.md) for complete guide
+
+### Production Dockerfile Features
+
+**File**: `backend/Dockerfile`
+
+- **Multi-stage build**: Separate dependency and production stages
+- **Non-root user**: `fitcoach:1000` for all operations
+- **Minimal base**: `python:3.11-slim` for small image size
+- **Layer optimization**: Dependencies installed before code copy
+- **Health check**: Built-in HTTP health endpoint check
+- **Development target**: Separate stage with hot-reload
+- **Security labels**: Metadata for security scanning
+- **.dockerignore**: Excludes unnecessary files from build context
+
+### Network Security
+
+1. **Internal Network**
+   - Database and Redis not exposed to host (production)
+   - Backend as only entry point
+   - Custom Docker network: `fitcoach-network`
+
+2. **Port Binding**
+   - Development: All ports exposed to localhost
+   - Production: Only reverse proxy exposed
+   - Configuration via environment variables
+
+### Image Security
+
+**Best Practices**:
+- Official base images only
+- Specific version tags (no `latest`)
+- Alpine Linux for minimal attack surface
+- Regular security scanning recommended
+
+**Scan for Vulnerabilities**:
+```bash
+# Install Trivy
+sudo apt-get install trivy
+
+# Scan base images
+trivy image postgres:15-alpine
+trivy image redis:7-alpine
+trivy image python:3.11-slim
+
+# Scan custom backend image
+docker build -t fitcoach-backend:latest backend/
+trivy image fitcoach-backend:latest
+```
+
+### Volume Security
+
+**Production Configuration**:
+- Persistent volumes for data
+- Separate volume for backups
+- Restrictive permissions
+- Bind mounts to specific directories
+
+```yaml
+volumes:
+  postgres_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: /var/lib/fitcoach/postgres
+```
+
+### Secrets Management
+
+**Development**:
+- `.env.docker` for Docker Compose variables
+- `backend/.env` for application secrets
+- Both files gitignored
+
+**Production Recommendations**:
+- Docker Secrets (Swarm mode)
+- Kubernetes Secrets
+- HashiCorp Vault
+- AWS Secrets Manager
+- Azure Key Vault
+
+### Monitoring & Logging
+
+**Container Logs**:
+```bash
+# View logs
+docker-compose logs -f backend
+docker-compose logs -f postgres
+
+# Backup logs
+cat backups/backup.log
+tail -f backups/backup.log
+```
+
+**Log Rotation**:
+```yaml
+services:
+  backend:
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+```
+
+### Production Deployment
+
+**Using Production Compose**:
+```bash
+# Start with production settings
+docker-compose -f docker-compose.yml -f docker-compose.production.yml up -d
+
+# View status
+docker-compose ps
+
+# View logs
+docker-compose logs -f
+```
+
+**Features**:
+- Resource limits enforced
+- Optimized PostgreSQL settings
+- Redis memory management
+- Automatic restarts
+- Health checks enabled
 
 ## 🛡️ Security Testing
 
@@ -313,5 +531,5 @@ In case of a security breach:
 
 ---
 
-**Last Updated**: 2025-11-08
-**Version**: 1.0.0
+**Last Updated**: 2025-11-18
+**Version**: 1.1.0 - Added Docker & DevOps Security
